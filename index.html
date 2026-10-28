@@ -1,0 +1,1561 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nightmast Studio — Open After Dark</title>
+<meta name="description" content="Nightmast Studio is an independent creative studio in Hobart. Brands, websites, packaging and content that glow after dark.">
+<meta name="theme-color" content="#050819">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=Yellowtail&display=swap" rel="stylesheet">
+<style>
+:root{
+  --night:#050819;
+  --night-2:#0d1440;
+  --glass:rgba(160,176,255,.12);
+  --glass-line:rgba(190,205,255,.22);
+  --text:#e9ecff;
+  --muted:rgba(220,226,255,.62);
+  --gutter:22px;
+  --side:56px;
+  --radius:30px;
+  --sans:"Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  --serif:"Instrument Serif",Georgia,serif;
+  --mono:"DM Mono",ui-monospace,Menlo,monospace;
+  --script:"Yellowtail",cursive;
+  /* page tokens, overwritten per page */
+  --pg:#a4d65e; --ink:#1f3d10; --pg-soft:rgba(255,255,255,.22); --pg-line:rgba(31,61,16,.22);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--night);color:var(--text);font-family:var(--sans);overflow:hidden;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+a{color:inherit}
+#gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;outline:none}
+
+/* ---------- loader ---------- */
+#loader{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:radial-gradient(120% 90% at 50% 100%,#1b1650 0%,#070b22 55%,#03050f 100%);transition:opacity .9s ease,visibility .9s}
+#loader.done{opacity:0;visibility:hidden}
+.ld{display:flex;flex-direction:column;align-items:center;gap:14px;font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.ld .pct{font-family:var(--serif);font-style:italic;font-size:54px;letter-spacing:0;color:var(--text);text-transform:none}
+.ld .bar{width:160px;height:2px;background:rgba(255,255,255,.12);border-radius:2px;overflow:hidden}
+.ld .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#9fb0ff,#ffd84a);transition:width .2s}
+
+/* ---------- hero chrome ---------- */
+.hud{position:fixed;inset:0;z-index:10;pointer-events:none;transition:opacity .5s ease}
+.hud.hide{opacity:0}
+.hud.hide *{pointer-events:none!important}
+.top{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;justify-content:space-between;padding:calc(14px + env(safe-area-inset-top)) 18px 0}
+.ic{pointer-events:auto;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--glass);border:1px solid var(--glass-line);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:background .25s,transform .25s}
+.ic:hover{background:rgba(170,186,255,.24);transform:translateY(-1px)}
+.ic svg{width:18px;height:18px}
+.ic.plain{background:none;border-color:transparent;backdrop-filter:none;-webkit-backdrop-filter:none}
+.ic.on{background:rgba(255,216,74,.2);border-color:rgba(255,216,74,.5)}
+.right{display:flex;gap:8px;align-items:center}
+.logo{position:absolute;left:50%;top:calc(10px + env(safe-area-inset-top));transform:translateX(-50%);pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none}
+.logo svg{width:44px;height:44px;filter:drop-shadow(0 0 10px rgba(255,140,210,.55))}
+.hints{position:absolute;left:50%;bottom:calc(22px + env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;gap:8px}
+.pill{font-size:11px;letter-spacing:.02em;padding:7px 12px;border-radius:99px;background:rgba(10,16,48,.55);border:1px solid var(--glass-line);color:var(--muted);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);white-space:nowrap}
+.corner{position:absolute;bottom:calc(24px + env(safe-area-inset-bottom));font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);line-height:1.6}
+.corner.l{left:20px}
+.corner.r{right:20px;text-align:right}
+.corner b{color:var(--text);font-weight:500}
+#tip{position:fixed;z-index:12;left:0;top:0;pointer-events:none;padding:7px 12px;border-radius:99px;font-size:11.5px;font-weight:500;color:#141414;background:#fff;box-shadow:0 6px 24px rgba(0,0,0,.35);opacity:0;transform:translate(-50%,-50%) scale(.85);transition:opacity .18s,transform .18s;white-space:nowrap}
+#tip.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+
+/* ---------- menu sheet ---------- */
+#menu{position:fixed;z-index:40;top:calc(62px + env(safe-area-inset-top));left:18px;width:min(300px,calc(100vw - 36px));padding:10px;border-radius:22px;background:rgba(12,18,52,.82);border:1px solid var(--glass-line);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 20px 60px rgba(0,0,0,.45);opacity:0;transform:translateY(-8px) scale(.98);transform-origin:top left;pointer-events:none;transition:opacity .25s,transform .25s}
+#menu.open{opacity:1;transform:none;pointer-events:auto}
+#menu .mh{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);padding:8px 10px 10px}
+#menu button{display:flex;align-items:center;gap:12px;width:100%;padding:11px 10px;border-radius:14px;text-align:left;font-size:15px;color:var(--text);transition:background .2s}
+#menu button:hover{background:rgba(255,255,255,.07)}
+#menu button i{width:14px;height:14px;border-radius:5px;flex:none;box-shadow:0 0 12px currentColor}
+#menu button span{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--muted)}
+
+/* ---------- page card ---------- */
+#card{position:fixed;z-index:30;left:50%;top:var(--gutter);width:min(960px,calc(100vw - var(--side)*2));height:calc(100dvh - var(--gutter)*2);transform:translateX(-50%);border-radius:var(--radius);background:var(--pg);color:var(--ink);opacity:0;visibility:hidden;overflow:hidden;box-shadow:0 30px 90px rgba(0,0,0,.45)}
+#card.vis{opacity:1;visibility:visible}
+#card.fade{transition:opacity .16s linear}
+.card-head{position:absolute;z-index:3;left:0;right:0;top:0;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:linear-gradient(var(--pg) 62%,transparent);}
+.card-head .ic{background:var(--pg-soft);border-color:var(--pg-line);color:var(--ink);backdrop-filter:none;-webkit-backdrop-filter:none}
+.card-head .l{display:flex;align-items:center;gap:12px}
+.crumb{font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;opacity:.75}
+.card-head .logo{top:10px}
+.card-head .logo svg{filter:none}
+.back{pointer-events:auto;font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;padding:9px 14px;border-radius:99px;background:var(--pg-soft);border:1px solid var(--pg-line);color:var(--ink);transition:background .2s}
+.back:hover{background:var(--ink);color:var(--pg)}
+.scroller{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:96px clamp(20px,5vw,64px) 64px;scrollbar-width:thin;scrollbar-color:var(--ink) transparent}
+.scroller::-webkit-scrollbar{width:4px}
+.scroller::-webkit-scrollbar-thumb{background:var(--ink);border-radius:4px}
+
+/* reveal */
+.rv{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.8,.2,1);transition-delay:calc(var(--d,0) * 70ms)}
+#card.show .rv{opacity:1;transform:none}
+#card.hide-content .rv{opacity:0;transform:translateY(-8px);transition-duration:.25s;transition-delay:0s}
+
+/* typography inside pages */
+.pg h1.big{font-family:var(--serif);font-style:italic;font-weight:400;font-size:clamp(44px,6vw,76px);line-height:1;letter-spacing:-.01em}
+.pg .kick{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;opacity:.75;margin-bottom:14px}
+.pg h2{font-weight:400;font-size:clamp(28px,3.4vw,44px);line-height:1.08;letter-spacing:-.02em}
+.pg h2 em,.pg h3 em{font-family:var(--serif);font-style:italic;font-size:1.08em;letter-spacing:0}
+.pg h3{font-weight:500;font-size:19px;line-height:1.25;letter-spacing:-.01em}
+.pg p{font-size:15px;line-height:1.6;max-width:62ch}
+.pg p.sm{font-size:13px;opacity:.82}
+.sec{padding:44px 0;border-top:1px solid var(--pg-line)}
+.sec:first-child{border-top:0;padding-top:0}
+.row2{display:grid;grid-template-columns:1.05fr 1fr;gap:40px;align-items:start}
+.stack>*+*{margin-top:16px}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:13px 20px;border-radius:12px;background:var(--ink);color:var(--pg);font-size:14px;font-weight:500;text-decoration:none;transition:transform .2s,box-shadow .2s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,.18)}
+.btn.round{border-radius:99px}
+.lnk{font-size:14px;text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px}
+.lnk:hover{text-decoration-thickness:2px}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.tile{background:var(--pg-soft);border:1px solid var(--pg-line);border-radius:18px;padding:22px}
+.tile h3{margin-bottom:10px}
+.tile p{font-size:14px}
+.tile .lnk{display:inline-block;margin-top:16px}
+.tile .note{display:block;margin-top:6px;font-size:12px;opacity:.7}
+.mt{margin-top:28px}
+.art{border-radius:18px;overflow:hidden;background:#0b1030;aspect-ratio:4/5;position:relative}
+.art svg{position:absolute;inset:0;width:100%;height:100%}
+.cap{font-size:12.5px;margin-top:10px;opacity:.8}
+
+/* pricing */
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:28px 0 30px}
+.tab{padding:9px 15px;border-radius:99px;border:1px solid var(--pg-line);font-size:13px;background:var(--pg-soft);transition:background .2s,color .2s}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--pg);border-color:var(--ink)}
+.price{display:flex;flex-direction:column;min-height:230px}
+.price .p{font-size:22px;letter-spacing:-.02em;margin:10px 0 12px}
+.price .ch{margin-top:auto;padding-top:14px;border-top:1px solid var(--pg-line);display:flex;justify-content:space-between;align-items:center;font-size:13px;width:100%;text-align:left}
+.price.sel{background:var(--ink);color:var(--pg)}
+.price.sel .ch{border-color:rgba(255,255,255,.25)}
+.price .ch b{font-weight:400;font-size:18px;transition:transform .25s}
+.price.sel .ch b{transform:rotate(45deg)}
+.chosen{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chosen span{font-size:12.5px;padding:7px 12px;border-radius:99px;background:var(--ink);color:var(--pg)}
+.fit{display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap}
+
+/* services */
+.svc{border-top:1px solid var(--pg-line)}
+.svc:last-child{border-bottom:1px solid var(--pg-line)}
+.svc>button{width:100%;display:grid;grid-template-columns:56px 1fr 28px;align-items:center;padding:22px 0;text-align:left}
+.svc .n{font-family:var(--mono);font-size:12px;opacity:.7}
+.svc .t{font-size:clamp(22px,2.6vw,32px);letter-spacing:-.02em}
+.svc .pm{font-size:22px;transition:transform .3s;justify-self:end}
+.svc.open .pm{transform:rotate(45deg)}
+.svc .bd{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s cubic-bezier(.2,.8,.2,1)}
+.svc.open .bd{grid-template-rows:1fr}
+.svc .bd>div{overflow:hidden}
+.svc .in{display:grid;grid-template-columns:56px 1fr 1fr;gap:24px;padding:0 0 26px}
+.lab{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;opacity:.7;margin-bottom:6px}
+.cover{aspect-ratio:16/10;border-radius:14px;overflow:hidden;position:relative;margin-bottom:14px;background:#0b1030}
+.cover svg{position:absolute;inset:0;width:100%;height:100%}
+
+/* contact */
+.form{display:grid;gap:12px;max-width:560px}
+.form input,.form textarea{width:100%;font:inherit;font-size:15px;color:var(--ink);background:var(--pg-soft);border:1px solid var(--pg-line);border-radius:12px;padding:14px 16px;outline:none}
+.form input:focus,.form textarea:focus{border-color:var(--ink)}
+.form ::placeholder{color:var(--ink);opacity:.55}
+.thanks{display:none;font-family:var(--serif);font-style:italic;font-size:30px}
+.form.sent{display:none}
+.form.sent+.thanks{display:block}
+
+/* ---------- mobile ---------- */
+@media (max-width:820px){
+  :root{--gutter:12px;--side:14px;--radius:24px}
+  .row2,.g2,.g3{grid-template-columns:1fr}
+  .row2{gap:22px}
+  .svc .in{grid-template-columns:1fr;gap:16px}
+  .svc>button{grid-template-columns:40px 1fr 24px}
+  .crumb{display:none}
+  .corner{display:none}
+  .card-head{padding:0 10px}
+  .card-head .logo svg{width:36px;height:36px}
+  .back{padding:8px 11px;font-size:10px}
+  .card-head .snd,.card-head .star{display:none}
+  .scroller{padding:84px 20px 48px}
+  .sec{padding:34px 0}
+  .price{min-height:0}
+}
+@media (max-width:420px){
+  .pill{font-size:10.5px;padding:6px 10px}
+}
+@media (prefers-reduced-motion:reduce){
+  .rv{transition:opacity .3s!important;transform:none!important}
+}
+</style>
+</head>
+<body>
+<canvas id="gl" tabindex="0" aria-label="A radio tower at night with a spinning ring of menu panels"></canvas>
+
+<div id="loader"><div class="ld"><div class="pct">0%</div><div class="bar"><i></i></div><div>Raising the mast…</div></div></div>
+
+<div class="hud" id="hud">
+  <div class="top">
+    <button class="ic" id="menuBtn" aria-label="Open menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 8h14M5 12h14M5 16h14"/></svg></button>
+    <a class="logo" href="#" aria-label="Nightmast Studio home" data-home></a>
+    <div class="right">
+      <button class="ic plain snd" aria-label="Toggle sound" data-sound></button>
+      <button class="ic plain star" aria-label="Make a wish" data-star><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 13 11"/><path d="M17 3l1.2 3.3L21.5 7.5l-3.3 1.2L17 12l-1.2-3.3L12.5 7.5l3.3-1.2z"/></svg></button>
+    </div>
+  </div>
+  <div class="corner l"><b>Nightmast Studio</b><br>42.88°S · 147.33°E</div>
+  <div class="corner r">Hobart · <b id="clock">--:--</b><br>Open after dark</div>
+  <div class="hints"><span class="pill" id="hint1">Scroll to spin</span><span class="pill" id="hint2">Click to explore</span></div>
+</div>
+
+<div id="tip"></div>
+
+<nav id="menu" aria-label="Main">
+  <div class="mh">Tune in to</div>
+</nav>
+
+<section id="card" aria-modal="true" role="dialog" aria-label="Page">
+  <header class="card-head">
+    <div class="l">
+      <button class="ic" data-cardmenu aria-label="Open menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 8h14M5 12h14M5 16h14"/></svg></button>
+      <span class="crumb" id="crumb">About us</span>
+    </div>
+    <a class="logo" href="#" aria-label="Back to tower" data-close></a>
+    <div class="right">
+      <button class="ic plain snd" aria-label="Toggle sound" data-sound></button>
+      <button class="back" data-close>Back to tower</button>
+    </div>
+  </header>
+  <div class="scroller" id="scroller"><div class="pg" id="pg"></div></div>
+</section>
+
+<script>
+/*CONTENT_START*/
+const CONTENT = {
+  about: {
+    h1a: "Stand out after", h1b: "the sun goes down",
+    p1: "Nightmast Studio is an independent creative studio in Hobart. We shape brands, websites, packaging and content that help people remember your business and give them a reason to drop back in.",
+    p2: "Opening a venue, launching a new range or outgrowing your site? Bring us the whole project or the piece that needs care.",
+    cta: "Send us your next big idea",
+    h2a: "Where we shine", h2b: "for growing teams.",
+    services: [
+      { t: "Packaging", d: "Give your product a glow-up on the shelf. Boxes, labels and print that join the brand with the details a buyer wants to know.", l: "View Lantern & Wick Co", n: "Work made in-house with L&W Co." },
+      { t: "Websites", d: "Make the next click easy to take. Website design, development and ecommerce, with clean content and a path to book, visit or order.", l: "View the Moonshiner website project" },
+      { t: "Branding", d: "Give your business a sharp direction and an unmistakable identity. Brand strategy, naming, logos and guidelines that hold up across every surface.", l: "View The Ember Parlor" },
+      { t: "Photography & video", d: "Show people what makes your offer worth a second look. Art direction, product photography, films and content for premieres, websites and social.", l: "View the Night Owls project" }
+    ],
+    explore: "See all of our services.",
+    h3a: "A clear path.", h3b: "Humans you can call on.",
+    steps: [
+      { t: "Begin with your business.", d: "We ask what has to change, who you want to reach and what people should do after that. It gives the creative work a clear goal." },
+      { t: "Know what’s expected.", d: "We agree the scope, deliverables, timing and fee before work starts. You can begin with one focused piece or a joined-up launch." },
+      { t: "Create it as one.", d: "You work directly with the people designing and building your project. We explain each choice, work through your notes and prepare the final files to launch." }
+    ],
+    peopleT: "The people behind the glow.",
+    caption: "Maeve & Tomasz, at 2am.",
+    names: "Maeve & Tomasz.",
+    bio1: "We’re Maeve Calder and Tomasz Wren, the co-founders of Nightmast Studio. We stay close from the first conversation to the final pixels, so the thinking behind your project carries all the way into the work.",
+    bio2: "We’ve been friends for 19 years. There’s a rhythm to how we work together: talking ideas through, poking at the obvious and being honest about what could be sharper. We bring you into that conversation.",
+    endA: "What are you", endB: "dreaming up now?",
+    endP: "You don’t need a polished brief. Tell us what you’re making, what needs to work smarter and when you need it. We’ll talk through where we can help and what comes after.",
+    cta2: "Send us your next big idea",
+    estimate: "Get a ballpark price estimate",
+    after: "Long after dark."
+  },
+  pricing: {
+    kicker: "A PRICE GUIDE", title: "An honest look at prices.",
+    sub: "Select a service, find a starting point, then let’s chat.",
+    note: "Estimates only · AUD, excluding GST. Your final quote depends on the brief. We’ll agree it with you before work begins.",
+    cats: [
+      { name: "Websites", title: "Websites", sub: "From one standout page to a complete web store.", items: [
+        { n: "Starter page", p: "$2,400–$4,200", d: "One simple page for your brand, an event or a new campaign." },
+        { n: "Showcase website", p: "$5,200–$7,800", d: "A fuller website with space for your services, story and bookings." },
+        { n: "Online shop build", p: "$6,800–$9,600", d: "An online store that weaves your products, browsing and checkout together." } ] },
+      { name: "Branding", title: "Branding", sub: "A new logo, or a more complete style for your business.", items: [
+        { n: "Logo design or tidy-up", p: "$600–$1,400", d: "Polish what you have or draw a fresh logo with versions for everyday use." },
+        { n: "Brand identity", p: "$2,200–$3,600", d: "Your logo, colours and typeface, with a guide that keeps everything consistent." } ] },
+      { name: "Packaging", title: "Packaging", sub: "Give your product a bold, well-considered spot on the shelf.", items: [
+        { n: "One product", p: "$700–$1,400", d: "A label, tin or pouch design for a single product." },
+        { n: "A product suite", p: "$3,200–$4,200", d: "A matching packaging style across a little family of products." },
+        { n: "Packaging + launch", p: "$3,600–$5,200", d: "Packaging design with extra campaign artwork to help launch the line." } ] },
+      { name: "Graphic Design", title: "Graphic Design", sub: "The handy design pieces that keep your business humming.", items: [
+        { n: "Everyday essentials", p: "$100–$400", d: "Business cards, letterhead and simple branded materials." },
+        { n: "Print, signage & menus", p: "$200–$700", d: "A poster, sign or menu that gets your point across." },
+        { n: "Social & digital", p: "$100–$900", d: "A single graphic or a small kit of assets for your online channels." } ] },
+      { name: "Photography", title: "Photography", sub: "Show your products, people or venue at their best.", items: [
+        { n: "Evening shoot", p: "$950–$1,600", d: "A short session for a small collection of products or one simple idea." },
+        { n: "Half-day shoot", p: "$1,600–$2,600", d: "More time for different products, setups or a fresh pile of content." },
+        { n: "Extended shoot", p: "$2,600–$4,200", d: "A longer shoot for a larger range, campaign or several setups." } ] },
+      { name: "Videography", title: "Videography", sub: "Short clips, product stories and films with a little more time.", items: [
+        { n: "Social reels", p: "$1,100–$2,400", d: "Quick vertical videos built for your feeds." },
+        { n: "Product or promo video", p: "$1,600–$2,700", d: "A focused video to introduce a product, service or event." },
+        { n: "Brand film", p: "$3,200–$4,400", d: "A longer piece to tell your story and show what makes your business tick." } ] }
+    ],
+    pick: "Grab the closest fit. You can choose anything from more than one category.",
+    mindT: "What you have in view", mindP: "These are starting points. We’ll shape the entire project together.",
+    fitT: "Let’s find your best fit.", fitP: "Have a small brief, a bigger dream or a budget in mind? Tell us what you’re picturing.",
+    talk: "Let’s chat",
+    costs: "Printing, production, hosting and any outside costs are separate. We’ll flag anything your project needs in our quote."
+  },
+  services: {
+    kicker: "NIGHTMAST STUDIO / WHAT WE DO",
+    h2a: "Shape the brand.", h2b: "Switch it on now.",
+    intro: "Branding, websites, packaging and photography, made together in Hobart. Five ways we help businesses of any size take shape, launch and keep glowing. Bring us a whole project or one part that needs some love.",
+    items: [
+      { name: "Brand", good: "New businesses, product launches and brands ready for a reboot.", d: "Get clear on what you stand for, then give it a name, a look and a voice people can remember. We connect the strategy with the identity, so your brand feels consistent wherever it turns up.", cover: "Brand strategy, positioning, naming, visual identity and brand guidebooks." },
+      { name: "Digital", good: "Businesses that need a new website, a sharper store or a smoother buyer journey.", d: "Make it simpler for people to understand your offer and take the next step. We plan, design and build websites around what your visitors need to find, do or buy.", cover: "UX/UI, website design and development, ecommerce and content hierarchy." },
+      { name: "Content", good: "Brands introducing products, telling their story or keeping feeds buzzing.", d: "Show what makes your business worth a second look. We develop the ideas, shape the shoot and create imagery and content that carries the same personality across your site, campaigns and social channels.", cover: "Art direction, photography, video, campaign concepts and social assets." },
+      { name: "Graphic & Packaging", good: "Product ranges, hospitality venues and teams with a distinct piece to make.", d: "Give the things people hold, read and notice the same care as your brand. From a product on a shelf to a menu on the table, we balance character with information that is simple to use.", cover: "Packaging, labels, menus, signage, prints, pitch decks and focussed design projects." },
+      { name: "Strategy & Growth", good: "Businesses planning a launch or choosing where to focus next.", d: "Turn a bold ambition into a realistic plan. We connect your audience, message and channels, then use feedback and performance to decide what to sharpen as the work goes live.", cover: "Campaign strategy, digital strategy, launch planning and constant fine-tuning." }
+    ],
+    wayT: "A calm, clear route.",
+    ways: [
+      { t: "Learn more.", d: "Your business, your audience and what needs to evolve." },
+      { t: "Draft.", d: "Agree the scope and fee, then explore a direction together." },
+      { t: "Ship.", d: "Design, refine and hand over, with space for notes along the way." }
+    ],
+    seeT: "See it in our work.",
+    see: [
+      { n: "The Ember Parlor", t: "Brand & website" },
+      { n: "Lantern & Wick Co", t: "Packaging & imagery · in-house work" },
+      { n: "Night Owls", t: "Website, menus & late-night content" }
+    ],
+    endA: "Begin with the thing", endB: "you want to switch.",
+    endP: "You don’t need to choose the perfect service. Tell us what you’re working towards and we’ll work out where to begin.",
+    cta: "Let’s chat about your project"
+  },
+  work: {
+    kicker: "NIGHTMAST STUDIO / HOBART, AUSTRALIA",
+    sub: "The stories behind the things we light.",
+    intro: "Explore the client context, creative decisions and finished work behind our hospitality, lifestyle and product projects, then enter the studio gallery for films and photography.",
+    items: [
+      { n: "Nightmast Gallery", d: "A gallery wall of social films, candid photography and campaign imagery." },
+      { n: "Night Owls", d: "A connected presentation of the food, the people and the practical information that turns curiosity into a seat." },
+      { n: "Lantern & Wick Co", d: "Emberleaf’s brand refresh and Moonwater’s range extension connect product development with the way customers discover and choose a new candle at night." },
+      { n: "The Ember Parlor", d: "One brand story, carried from the very first glance to the small print on the box." },
+      { n: "Moonshiner", d: "A no-nonsense website build, with search visibility, after-hours bookings and visits to the Salamanca wine bar at its heart." },
+      { n: "Southern Lights Lamp House", d: "Brand direction, logo refinement, research-led copywriting, photo direction and a website built around direct bookings." },
+      { n: "Inkwell Co", d: "A colourful world for collectors, with a clear route from discovery to the detail of a poster. The project is still in the works and the business has not yet launched." }
+    ],
+    foot: "Lantern & Wick Co includes work developed in-house at L&W. Each project includes its own context and credits.",
+    cta: "Send us your next big idea."
+  }
+};
+/*CONTENT_END*/
+</script>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+/* =====================================================================
+   PAGES
+   ===================================================================== */
+const PAGES = {
+  about:    { label: 'About Us', bg: '#a4d65e', ink: '#1f3d10', tip: 'Explore About Us' },
+  pricing:  { label: 'Pricing',  bg: '#ffd84a', ink: '#2a1d00', tip: 'Explore Pricing' },
+  work:     { label: 'Our Work', bg: '#ff5c8d', ink: '#4a0019', tip: 'Explore Our Work' },
+  services: { label: 'Services', bg: '#94e6cc', ink: '#0b4a44', tip: 'Explore Services' },
+  contact:  { label: 'Contact',  bg: '#ff7a3d', ink: '#3a1200', tip: 'Say hello' },
+};
+const RING_ORDER = ['about', 'pricing', 'work', 'services'];
+
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const isTouch = matchMedia('(hover: none)').matches;
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- logo (code-drawn pixel crescent) ---------- */
+function logoSVG() {
+  const px = [
+    '....XXXX....', '..XXXX......', '.XXXX.......', '.XXX......*.', 'XXXX.....***',
+    'XXXX......*.', 'XXXX........', 'XXXXX.......', '.XXXXX....XX', '.XXXXXXXXXX.',
+    '..XXXXXXXX..', '....XXXX....'
+  ];
+  let r = '';
+  px.forEach((row, y) => [...row].forEach((c, x) => {
+    if (c === 'X') r += `<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="#ff9ad5"/>`;
+    if (c === '*') r += `<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="#ffe27a"/>`;
+  }));
+  return `<svg viewBox="-1 -1 14 14" shape-rendering="crispEdges">${r}</svg>`;
+}
+$$('.logo').forEach(a => a.innerHTML = logoSVG());
+
+const ICON_MUTE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="m16 9.5 5 5M21 9.5l-5 5"/></svg>';
+const ICON_SOUND = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>';
+$$('[data-sound]').forEach(b => b.innerHTML = ICON_MUTE);
+
+/* ---------- code-drawn illustrations ---------- */
+function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+function nightArt(seed, accent = '#ffd84a', alt = '#ff5c8d', kind = 0) {
+  const R = rng(seed * 997 + 13);
+  let stars = '';
+  for (let i = 0; i < 46; i++) stars += `<circle cx="${(R() * 400).toFixed(1)}" cy="${(R() * 300).toFixed(1)}" r="${(R() * 1.3 + .3).toFixed(2)}" fill="#fff" opacity="${(R() * .7 + .3).toFixed(2)}"/>`;
+  const mx = 60 + R() * 280, my = 50 + R() * 60;
+  let fg = '';
+  if (kind === 0) { // skyline with windows
+    let x = 0;
+    while (x < 400) {
+      const w = 26 + R() * 50, h = 70 + R() * 150;
+      fg += `<rect x="${x.toFixed(1)}" y="${(500 - h).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" fill="#0a0f2e"/>`;
+      for (let wy = 500 - h + 10; wy < 490; wy += 14) for (let wx = x + 6; wx < x + w - 8; wx += 11) if (R() > .62) fg += `<rect x="${wx.toFixed(1)}" y="${wy.toFixed(1)}" width="5" height="7" fill="${R() > .5 ? accent : '#ffe9b0'}" opacity=".9"/>`;
+      x += w + 2;
+    }
+  } else if (kind === 1) { // product bottles / candles
+    for (let i = 0; i < 3; i++) {
+      const cx = 90 + i * 110, h = 140 + R() * 60;
+      fg += `<rect x="${cx - 34}" y="${500 - h - 40}" width="68" height="${h}" rx="14" fill="${[accent, alt, '#94e6cc'][i]}"/>`;
+      fg += `<rect x="${cx - 22}" y="${500 - h - 4}" width="44" height="40" rx="4" fill="#0a0f2e" opacity=".85"/>`;
+      fg += `<path d="M${cx} ${500 - h - 64} q8 12 0 22 q-8 -10 0 -22z" fill="#ffe27a"/><circle cx="${cx}" cy="${500 - h - 50}" r="22" fill="#ffd84a" opacity=".18"/>`;
+    }
+    fg += `<rect x="0" y="460" width="400" height="40" fill="#0a0f2e"/>`;
+  } else if (kind === 2) { // neon sign
+    fg += `<rect x="40" y="200" width="320" height="170" rx="26" fill="none" stroke="${alt}" stroke-width="7" opacity=".95"/><rect x="40" y="200" width="320" height="170" rx="26" fill="none" stroke="${alt}" stroke-width="22" opacity=".18"/>`;
+    fg += `<text x="200" y="305" text-anchor="middle" font-family="Yellowtail, cursive" font-size="74" fill="${accent}">open late</text>`;
+    fg += `<rect x="0" y="430" width="400" height="70" fill="#0a0f2e"/>`;
+  } else { // two figures on a rooftop under a lamp
+    fg += `<rect x="0" y="400" width="400" height="100" fill="#0a0f2e"/><rect x="280" y="210" width="6" height="190" fill="#1a2150"/><path d="M262 210h42l-8 -18h-26z" fill="#1a2150"/><circle cx="283" cy="214" r="70" fill="${accent}" opacity=".16"/><circle cx="283" cy="212" r="9" fill="#ffe9b0"/>`;
+    fg += `<path d="M120 400v-92a26 26 0 0 1 52 0v92z" fill="#121a46"/><circle cx="146" cy="262" r="20" fill="#121a46"/><path d="M188 400v-84a24 24 0 0 1 48 0v84z" fill="#161f55"/><circle cx="212" cy="276" r="18" fill="#161f55"/>`;
+    fg += `<path d="M120 330 h52" stroke="${alt}" stroke-width="3" opacity=".7"/>`;
+  }
+  return `<svg viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="sk${seed}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050819"/><stop offset=".6" stop-color="#151d55"/><stop offset="1" stop-color="#3a2468"/></linearGradient><radialGradient id="mg${seed}"><stop offset="0" stop-color="#fff6dd" stop-opacity=".55"/><stop offset="1" stop-color="#fff6dd" stop-opacity="0"/></radialGradient></defs><rect width="400" height="500" fill="url(#sk${seed})"/>${stars}<circle cx="${mx}" cy="${my}" r="70" fill="url(#mg${seed})"/><circle cx="${mx}" cy="${my}" r="20" fill="#f6f1e2"/><circle cx="${mx + 8}" cy="${my - 5}" r="18" fill="#0b1030" opacity=".9"/>${fg}</svg>`;
+}
+
+/* ---------- page templates ---------- */
+function headerBlock(kicker, title) {
+  return `${kicker ? `<div class="kick rv">${esc(kicker)}</div>` : ''}<h1 class="big rv" style="--d:1">${esc(title)}</h1>`;
+}
+const TPL = {
+  about(c) {
+    return `
+    <div class="sec">
+      ${headerBlock('', 'About Us')}
+      <div class="row2 mt">
+        <h2 class="rv" style="--d:2">${esc(c.h1a)}<br><em>${esc(c.h1b)}</em></h2>
+        <div class="stack rv" style="--d:3"><p>${esc(c.p1)}</p><p>${esc(c.p2)}</p></div>
+      </div>
+      <div class="mt rv" style="--d:4"><a class="btn" href="#contact" data-open="contact">${esc(c.cta)}</a></div>
+    </div>
+    <div class="sec">
+      <h2 class="rv">${esc(c.h2a)}<br><em>${esc(c.h2b)}</em></h2>
+      <div class="grid g2 mt">
+        ${c.services.map((s, i) => `<div class="tile rv" style="--d:${i + 1}"><h3>${esc(s.t)}</h3><p>${esc(s.d)}</p><a class="lnk" href="#work" data-open="work">${esc(s.l)}</a>${s.n ? `<span class="note">${esc(s.n)}</span>` : ''}</div>`).join('')}
+      </div>
+      <div class="mt rv"><a class="lnk" href="#services" data-open="services">${esc(c.explore)}</a></div>
+    </div>
+    <div class="sec">
+      <h2 class="rv">${esc(c.h3a)}<br><em>${esc(c.h3b)}</em></h2>
+      <div class="grid g3 mt">${c.steps.map((s, i) => `<div class="rv" style="--d:${i + 1}"><h3 style="margin-bottom:10px">${esc(s.t)}</h3><p class="sm">${esc(s.d)}</p></div>`).join('')}</div>
+    </div>
+    <div class="sec">
+      <h2 class="rv">${esc(c.peopleT)}</h2>
+      <div class="row2 mt">
+        <div class="rv" style="--d:1"><div class="art">${nightArt(7, '#ffd84a', '#a4d65e', 3)}</div><div class="cap">${esc(c.caption)}</div></div>
+        <div class="stack rv" style="--d:2"><h3><em>${esc(c.names)}</em></h3><p>${esc(c.bio1)}</p><p>${esc(c.bio2)}</p></div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="row2">
+        <div class="stack rv"><h2>${esc(c.endA)}<br><em>${esc(c.endB)}</em></h2><p>${esc(c.endP)}</p>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;gap:16px;margin-top:22px"><a class="btn" href="#contact" data-open="contact">${esc(c.cta2)}</a><a class="lnk" href="#pricing" data-open="pricing">${esc(c.estimate)}</a></div></div>
+        <div class="rv" style="--d:2"><div class="art">${nightArt(21, '#ffd84a', '#ff5c8d', 2)}</div><div class="cap">${esc(c.after)}</div></div>
+      </div>
+    </div>`;
+  },
+  pricing(c) {
+    return `
+    <div class="sec">
+      ${headerBlock(c.kicker, 'Pricing')}
+      <h2 class="rv mt" style="--d:2">${esc(c.title)}</h2>
+      <p class="rv" style="--d:3;margin-top:12px">${esc(c.sub)}</p>
+      <p class="sm rv" style="--d:3;margin-top:10px">${esc(c.note)}</p>
+      <div class="tabs rv" style="--d:4" role="tablist">${c.cats.map((k, i) => `<button class="tab" role="tab" aria-selected="${i === 0}" data-tab="${i}">${esc(k.name)}</button>`).join('')}</div>
+      <div id="catBody" class="rv" style="--d:5"></div>
+      <p class="sm rv" style="margin-top:18px">${esc(c.pick)}</p>
+    </div>
+    <div class="sec">
+      <h3 class="rv">${esc(c.mindT)}</h3>
+      <p class="sm rv" style="margin-top:6px">${esc(c.mindP)}</p>
+      <div class="chosen rv" id="chosen"></div>
+    </div>
+    <div class="sec">
+      <div class="fit rv"><div><h2>${esc(c.fitT)}</h2><p style="margin-top:10px">${esc(c.fitP)}</p></div><a class="btn round" href="#contact" data-open="contact">${esc(c.talk)}</a></div>
+      <p class="sm rv" style="margin-top:22px">${esc(c.costs)}</p>
+    </div>`;
+  },
+  services(c) {
+    const kinds = [2, 0, 3, 1, 0];
+    return `
+    <div class="sec">
+      ${headerBlock(c.kicker, 'Services')}
+      <div class="row2 mt"><h2 class="rv" style="--d:2">${esc(c.h2a)}<br><em>${esc(c.h2b)}</em></h2><p class="rv" style="--d:3">${esc(c.intro)}</p></div>
+    </div>
+    <div class="sec" style="padding-top:10px;border-top:0">
+      ${c.items.map((s, i) => `<div class="svc rv ${i === 0 ? 'open' : ''}" style="--d:${i}">
+        <button aria-expanded="${i === 0}"><span class="n">0${i + 1}</span><span class="t">${esc(s.name)}</span><span class="pm">+</span></button>
+        <div class="bd"><div><div class="in"><span></span>
+          <div><div class="cover">${nightArt(40 + i, '#0b4a44', '#ff5c8d', kinds[i])}</div><div class="lab">Good for</div><p class="sm">${esc(s.good)}</p></div>
+          <div class="stack"><p>${esc(s.d)}</p><div><div class="lab">What we cover</div><p class="sm">${esc(s.cover)}</p></div></div>
+        </div></div></div></div>`).join('')}
+    </div>
+    <div class="sec">
+      <h2 class="rv">${esc(c.wayT)}</h2>
+      <div class="grid g3 mt">${c.ways.map((w, i) => `<div class="tile rv" style="--d:${i + 1}"><div class="lab">Step 0${i + 1}</div><h3>${esc(w.t)}</h3><p class="sm">${esc(w.d)}</p></div>`).join('')}</div>
+    </div>
+    <div class="sec">
+      <h2 class="rv">${esc(c.seeT)}</h2>
+      <div class="grid g3 mt">${c.see.map((w, i) => `<a class="rv" href="#work" data-open="work" style="--d:${i + 1};text-decoration:none"><div class="cover">${nightArt(60 + i, '#ffd84a', '#ff5c8d', [2, 1, 0][i])}</div><h3>${esc(w.n)}</h3><p class="sm">${esc(w.t)}</p></a>`).join('')}</div>
+    </div>
+    <div class="sec">
+      <h2 class="rv">${esc(c.endA)}<br><em>${esc(c.endB)}</em></h2>
+      <p class="rv" style="margin-top:14px">${esc(c.endP)}</p>
+      <div class="mt rv"><a class="btn" href="#contact" data-open="contact">${esc(c.cta)}</a></div>
+    </div>`;
+  },
+  work(c) {
+    const kinds = [3, 2, 1, 2, 0, 1, 3];
+    return `
+    <div class="sec">
+      ${headerBlock(c.kicker, 'Our Work')}
+      <div class="row2 mt"><h2 class="rv" style="--d:2">${esc(c.sub)}</h2><p class="rv" style="--d:3">${esc(c.intro)}</p></div>
+    </div>
+    <div class="sec">
+      <div class="grid g2">${c.items.map((w, i) => `<article class="rv" style="--d:${i % 2}"><div class="cover">${nightArt(80 + i, '#ffd84a', '#94e6cc', kinds[i])}</div><h3>${esc(w.n)}</h3><p class="sm" style="margin-top:6px">${esc(w.d)}</p></article>`).join('')}</div>
+      <p class="sm rv" style="margin-top:28px">${esc(c.foot)}</p>
+      <div class="mt rv"><a class="btn" href="#contact" data-open="contact">${esc(c.cta)}</a></div>
+    </div>`;
+  },
+  contact() {
+    return `
+    <div class="sec">
+      ${headerBlock('NIGHTMAST STUDIO / SAY HELLO', 'Contact')}
+      <div class="row2 mt">
+        <div class="stack rv" style="--d:2"><h2>The lights are on.<br><em>Come say hello.</em></h2><p>Tell us a little about what you’re making. We read every note and reply within a day or two — usually after dark.</p><p class="sm">hello@nightmast.studio<br>Studio 4, 12 Salamanca Lane, Hobart TAS</p></div>
+        <div class="rv" style="--d:3">
+          <form class="form" id="cform">
+            <input required name="name" placeholder="Your name" autocomplete="name">
+            <input required type="email" name="email" placeholder="Email address" autocomplete="email">
+            <textarea required name="msg" rows="5" placeholder="What are you working on?"></textarea>
+            <div><button class="btn" type="submit">Send it into the night</button></div>
+          </form>
+          <div class="thanks">Message received — talk soon.</div>
+        </div>
+      </div>
+    </div>`;
+  }
+};
+
+function renderPage(key) {
+  const p = PAGES[key];
+  const card = $('#card');
+  card.style.setProperty('--pg', p.bg);
+  card.style.setProperty('--ink', p.ink);
+  card.style.setProperty('--pg-line', hexA(p.ink, .2));
+  card.style.setProperty('--pg-soft', 'rgba(255,255,255,.24)');
+  $('#crumb').textContent = p.label;
+  card.setAttribute('aria-label', p.label);
+  $('#pg').innerHTML = TPL[key](CONTENT[key]);
+  $('#scroller').scrollTop = 0;
+  if (key === 'pricing') wirePricing();
+  if (key === 'services') $$('.svc>button').forEach(b => b.onclick = () => { const s = b.parentElement; s.classList.toggle('open'); b.setAttribute('aria-expanded', s.classList.contains('open')); });
+  if (key === 'contact') $('#cform').onsubmit = e => { e.preventDefault(); e.target.classList.add('sent'); };
+}
+function hexA(hex, a) { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; }
+function wirePricing() {
+  const c = CONTENT.pricing, chosen = new Set();
+  const body = $('#catBody');
+  const draw = i => {
+    const k = c.cats[i];
+    body.innerHTML = `<h3 style="font-size:26px;font-weight:400">${esc(k.title)}</h3><p class="sm" style="margin:6px 0 18px">${esc(k.sub)}</p>
+      <div class="grid g3">${k.items.map((it, j) => { const id = i + '-' + j; return `<div class="tile price ${chosen.has(id) ? 'sel' : ''}" data-id="${id}"><h3>${esc(it.n)}</h3><div class="p">${esc(it.p)}</div><p class="sm">${esc(it.d)}</p><button class="ch">Choose this <b>+</b></button></div>`; }).join('')}</div>`;
+    $$('.price', body).forEach(el => el.querySelector('.ch').onclick = () => {
+      const id = el.dataset.id; chosen.has(id) ? chosen.delete(id) : chosen.add(id); el.classList.toggle('sel'); drawChosen();
+    });
+  };
+  const drawChosen = () => {
+    const box = $('#chosen');
+    box.innerHTML = chosen.size ? [...chosen].map(id => { const [a, b] = id.split('-'); const it = c.cats[a].items[b]; return `<span>${esc(it.n)} · ${esc(it.p)}</span>`; }).join('') : '<p class="sm">Nothing picked yet.</p>';
+  };
+  $$('.tab').forEach(t => t.onclick = () => { $$('.tab').forEach(x => x.setAttribute('aria-selected', x === t)); draw(+t.dataset.tab); });
+  draw(0); drawChosen();
+}
+
+/* =====================================================================
+   THREE.JS SCENE
+   ===================================================================== */
+const canvas = $('#gl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+const DPR = Math.min(devicePixelRatio || 1, isTouch ? 1.75 : 2);
+renderer.setPixelRatio(DPR);
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.NoToneMapping;   // keeps panel colours identical to the CSS page colours
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(36, innerWidth / innerHeight, 0.1, 3000);
+
+const rt = new THREE.WebGLRenderTarget(innerWidth * DPR, innerHeight * DPR, { type: THREE.HalfFloatType, samples: 4 });
+const composer = new EffectComposer(renderer, rt);
+composer.setPixelRatio(DPR);
+composer.setSize(innerWidth, innerHeight);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), isTouch ? .45 : .55, .5, .9);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+const C = hex => new THREE.Color(hex);
+const MOON_DIR = new THREE.Vector3(-0.4, 0.42, -1).normalize();
+
+/* ---------- sky ---------- */
+const NOISE_GLSL = `
+float h3(vec3 p){ p = fract(p*0.3183099+.1); p *= 17.0; return fract(p.x*p.y*p.z*(p.x+p.y+p.z)); }
+float n3(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
+  return mix(mix(mix(h3(i),h3(i+vec3(1,0,0)),f.x),mix(h3(i+vec3(0,1,0)),h3(i+vec3(1,1,0)),f.x),f.y),
+             mix(mix(h3(i+vec3(0,0,1)),h3(i+vec3(1,0,1)),f.x),mix(h3(i+vec3(0,1,1)),h3(i+vec3(1,1,1)),f.x),f.y),f.z); }
+float fbm(vec3 p){ float a=.5, s=0.; for(int i=0;i<5;i++){ s+=a*n3(p); p*=2.03; a*=.5; } return s; }`;
+function skyMaterial(boost = 1) {
+  return new THREE.ShaderMaterial({
+    side: THREE.BackSide, depthWrite: false,
+    uniforms: {
+      cTop: { value: C('#03061a') }, cMid: { value: C('#0e1748') }, cHor: { value: C('#2c2468') }, cGlow: { value: C('#8a3f74') },
+      uMoon: { value: MOON_DIR }, uBoost: { value: boost }
+    },
+    vertexShader: `varying vec3 vDir; void main(){ vDir = normalize(position); gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+    fragmentShader: `varying vec3 vDir; uniform vec3 cTop,cMid,cHor,cGlow,uMoon; uniform float uBoost; ${NOISE_GLSL}
+      void main(){
+        vec3 d = normalize(vDir); float e = d.y;
+        vec3 col = mix(cHor, cMid, smoothstep(-0.04, 0.24, e));
+        col = mix(col, cTop, smoothstep(0.2, 0.8, e));
+        col = mix(col, cGlow, (1.0 - smoothstep(-0.12, 0.1, e)) * 0.75);
+        // faint milky band
+        float bd = dot(d, normalize(vec3(0.55, 0.35, 0.76)));
+        float band = exp(-bd*bd*14.0) * smoothstep(0.0, 0.35, e);
+        float neb = fbm(d*4.0 + 3.1);
+        col += vec3(0.10,0.09,0.22) * band * (0.4 + neb) * 0.9;
+        col += vec3(0.05,0.02,0.08) * smoothstep(.55,.9,fbm(d*2.2)) * smoothstep(0.05,0.4,e);
+        // moon halo
+        float m = max(dot(d, uMoon), 0.0);
+        col += vec3(0.55,0.6,0.8) * (pow(m, 900.0)*0.0 + pow(m, 120.0)*0.25 + pow(m, 14.0)*0.05);
+        gl_FragColor = vec4(col * uBoost, 1.0);
+      }`
+  });
+}
+const skyGroup = new THREE.Group(); // follows camera so it's infinitely far
+scene.add(skyGroup);
+skyGroup.add(new THREE.Mesh(new THREE.SphereGeometry(900, 48, 32), skyMaterial()));
+
+/* stars */
+{
+  const N = isTouch ? 1400 : 2400, pos = new Float32Array(N * 3), size = new Float32Array(N), ph = new Float32Array(N);
+  for (let i = 0; i < N; i++) {
+    let v; do { v = new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 1.1 - .1, Math.random() * 2 - 1); } while (v.length() > 1 || v.y < -0.02);
+    v.normalize().multiplyScalar(800);
+    pos.set([v.x, v.y, v.z], i * 3);
+    size[i] = Math.pow(Math.random(), 6) * 3.4 + 0.7;
+    ph[i] = Math.random() * 100;
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('size', new THREE.BufferAttribute(size, 1));
+  g.setAttribute('phase', new THREE.BufferAttribute(ph, 1));
+  const m = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    uniforms: { uTime: { value: 0 }, uPR: { value: DPR } },
+    vertexShader: `attribute float size; attribute float phase; uniform float uTime, uPR; varying float vA; varying float vS;
+      void main(){ vec4 mv = modelViewMatrix*vec4(position,1.); gl_Position = projectionMatrix*mv;
+        float tw = 0.65 + 0.35*sin(uTime*(1.2+fract(phase)*2.5) + phase);
+        vA = tw * smoothstep(-0.02, 0.18, normalize(position).y); vS = size;
+        gl_PointSize = size * uPR * (0.8 + 0.4*tw); }`,
+    fragmentShader: `varying float vA; varying float vS; void main(){ float d = length(gl_PointCoord-.5); float a = smoothstep(.5,.0,d);
+      vec3 c = mix(vec3(.75,.82,1.), vec3(1.,.93,.8), step(2.6, vS)); gl_FragColor = vec4(c * (vS>2.6?1.8:1.0), a*vA); }`
+  });
+  const stars = new THREE.Points(g, m); stars.frustumCulled = false;
+  skyGroup.add(stars);
+  skyGroup.userData.starMat = m;
+}
+
+/* canvas helper */
+function cnv(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return [c, c.getContext('2d')]; }
+function tex(c, srgb = true) { const t = new THREE.CanvasTexture(c); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t; }
+
+/* moon */
+{
+  const [c, x] = cnv(512, 512);
+  const g = x.createRadialGradient(230, 220, 30, 256, 256, 200);
+  g.addColorStop(0, '#fffaf0'); g.addColorStop(.7, '#e9e6dc'); g.addColorStop(1, '#bfc3d6');
+  x.fillStyle = g; x.beginPath(); x.arc(256, 256, 200, 0, Math.PI * 2); x.fill();
+  const R = rng(5);
+  x.save(); x.beginPath(); x.arc(256, 256, 200, 0, Math.PI * 2); x.clip();
+  for (let i = 0; i < 26; i++) { const r = 6 + R() * 34; x.fillStyle = `rgba(120,124,150,${.12 + R() * .2})`; x.beginPath(); x.ellipse(80 + R() * 350, 80 + R() * 350, r, r * (.8 + R() * .3), 0, 0, 7); x.fill(); }
+  x.fillStyle = 'rgba(140,140,170,.18)'; x.beginPath(); x.ellipse(200, 300, 90, 60, .4, 0, 7); x.fill();
+  x.restore();
+  const moon = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex(c), color: new THREE.Color(1.05, 1.05, 1.02), depthWrite: false, fog: false }));
+  moon.position.copy(MOON_DIR).multiplyScalar(700); moon.scale.setScalar(34);
+  const [c2, x2] = cnv(256, 256);
+  const g2 = x2.createRadialGradient(128, 128, 0, 128, 128, 128);
+  g2.addColorStop(0, 'rgba(200,215,255,.55)'); g2.addColorStop(.25, 'rgba(160,180,255,.18)'); g2.addColorStop(1, 'rgba(120,140,255,0)');
+  x2.fillStyle = g2; x2.fillRect(0, 0, 256, 256);
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex(c2), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
+  halo.position.copy(moon.position).multiplyScalar(1.01); halo.scale.setScalar(200); halo.material.opacity = .7;
+  skyGroup.add(halo, moon);
+}
+
+/* minimal clouds — two soft moonlit wisps */
+const clouds = [];
+{
+  const make = seed => {
+    const [c, x] = cnv(512, 256), R = rng(seed); x.filter = 'blur(10px)';
+    for (let i = 0; i < 18; i++) {
+      const px = 110 + R() * 290, py = 120 + (R() - .5) * 60 - Math.sin((px - 90) / 330 * Math.PI) * 30, r = 50 + R() * 46;
+      const g = x.createRadialGradient(px, py - r * .3, 0, px, py, r);
+      g.addColorStop(0, 'rgba(170,182,230,.32)'); g.addColorStop(.55, 'rgba(92,104,160,.2)'); g.addColorStop(1, 'rgba(40,48,100,0)');
+      x.fillStyle = g; x.beginPath(); x.arc(px, py, r, 0, 7); x.fill();
+    }
+    return tex(c);
+  };
+  [[-15, 5.2, -26, 15, 7.5, 1, .8], [18, -2.4, -40, 13, 5.5, 2, .5]].forEach(([px, py, pz, sx, sy, seed, op]) => {
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: make(seed), transparent: true, opacity: op, depthWrite: false }));
+    s.position.set(px, py, pz); s.scale.set(sx, sy, 1); s.userData.x0 = px; s.userData.v = .12 + Math.random() * .08;
+    scene.add(s); clouds.push(s);
+  });
+}
+
+/* shooting stars (points trail) */
+const shooting = [];
+const SHOOT_N = 26;
+function spawnShootingStar() {
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(SHOOT_N * 3), 3));
+  const a = new Float32Array(SHOOT_N); for (let i = 0; i < SHOOT_N; i++) a[i] = 1 - i / SHOOT_N;
+  g.setAttribute('fade', new THREE.BufferAttribute(a, 1));
+  const m = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, uniforms: { uLife: { value: 1 }, uPR: { value: DPR } },
+    vertexShader: `attribute float fade; uniform float uPR; varying float vF; void main(){ vF=fade; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); gl_PointSize=(1.0+fade*3.2)*uPR; }`,
+    fragmentShader: `varying float vF; uniform float uLife; void main(){ float d=length(gl_PointCoord-.5); gl_FragColor=vec4(vec3(1.4,1.4,1.6), smoothstep(.5,0.,d)*vF*vF*uLife); }`
+  });
+  const p = new THREE.Points(g, m); p.frustumCulled = false;
+  const az = (Math.random() - .5) * 1.1 - Math.PI / 2, el = .22 + Math.random() * .3;
+  const head = new THREE.Vector3(Math.cos(az) * Math.cos(el), Math.sin(el), Math.sin(az) * Math.cos(el)).multiplyScalar(600);
+  const side = Math.random() < .5 ? -1 : 1;
+  const vel = new THREE.Vector3(side * (380 + Math.random() * 200), -(140 + Math.random() * 120), 0);
+  skyGroup.add(p);
+  shooting.push({ p, head, vel, t: 0, life: .9 + Math.random() * .4 });
+}
+
+/* ---------- environment map for metals ---------- */
+{
+  const pm = new THREE.PMREMGenerator(renderer);
+  const env = new THREE.Scene();
+  env.add(new THREE.Mesh(new THREE.SphereGeometry(100, 32, 16), skyMaterial(2.4)));
+  const moonBall = new THREE.Mesh(new THREE.SphereGeometry(9, 16, 8), new THREE.MeshBasicMaterial({ color: new THREE.Color(9, 9, 10) }));
+  moonBall.position.copy(MOON_DIR).multiplyScalar(80); env.add(moonBall);
+  const glow = new THREE.Mesh(new THREE.CylinderGeometry(90, 90, 10, 32, 1, true), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.1, .45, .7), side: THREE.BackSide }));
+  glow.position.y = -12; env.add(glow);
+  const key = new THREE.Mesh(new THREE.PlaneGeometry(60, 20), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.6, 1.7, 2.4), side: THREE.DoubleSide }));
+  key.position.set(-40, 50, 40); key.lookAt(0, 0, 0); env.add(key);
+  scene.environment = pm.fromScene(env, 0.03, 0.1, 400).texture;
+}
+
+/* ---------- lights ---------- */
+scene.add(new THREE.HemisphereLight(0x5a6ad0, 0x1a0c26, 0.9));
+const moonLight = new THREE.DirectionalLight(0xc8d4ff, 2.0); moonLight.position.set(-9, 11, 10); scene.add(moonLight);
+const warm = new THREE.PointLight(0xff8a4a, 12, 9, 1.8); warm.position.set(0, -2.4, 4.2); scene.add(warm);
+const rim = new THREE.PointLight(0x7a86ff, 40, 20, 1.6); rim.position.set(6.5, 3.5, -3); scene.add(rim);
+const rim2 = new THREE.PointLight(0xff6fb8, 18, 16, 1.6); rim2.position.set(-6.5, -1, -2); scene.add(rim2);
+
+/* =====================================================================
+   TOWER
+   ===================================================================== */
+const tower = new THREE.Group();
+scene.add(tower);
+
+function stripeTexture({ w = 1024, h = 128, base = '#8f9ab8', lines = 64, seams = 0, windows = 0, winColor = '#ffcf7a', seed = 1 } = {}) {
+  const [c, x] = cnv(w, h), [ce, xe] = cnv(w, h), R = rng(seed);
+  x.fillStyle = base; x.fillRect(0, 0, w, h);
+  xe.fillStyle = '#000'; xe.fillRect(0, 0, w, h);
+  for (let i = 0; i < lines; i++) {
+    const px = i * w / lines;
+    const g = x.createLinearGradient(px, 0, px + w / lines, 0);
+    g.addColorStop(0, 'rgba(255,255,255,.28)'); g.addColorStop(.45, 'rgba(255,255,255,0)'); g.addColorStop(.92, 'rgba(0,0,0,.22)'); g.addColorStop(1, 'rgba(0,0,0,.45)');
+    x.fillStyle = g; x.fillRect(px, 0, w / lines, h);
+  }
+  for (let s = 1; s <= seams; s++) { x.fillStyle = 'rgba(0,0,0,.35)'; x.fillRect(0, s * h / (seams + 1), w, 2); }
+  for (let i = 0; i < windows; i++) {
+    const cx = Math.floor(R() * lines) * w / lines + w / lines * .3, cy = (Math.floor(R() * (seams + 1)) + .35) * h / (seams + 1);
+    const ww = w / lines * .4, hh = h / (seams + 1) * .3;
+    x.fillStyle = '#2a2a36'; x.fillRect(cx, cy, ww, hh);
+    xe.fillStyle = R() > .3 ? winColor : '#9fd0ff'; xe.globalAlpha = .5 + R() * .5; xe.fillRect(cx, cy, ww, hh); xe.globalAlpha = 1;
+  }
+  return [tex(c), tex(ce)];
+}
+const metal = (opts = {}) => new THREE.MeshStandardMaterial({ color: 0xd4dbef, metalness: .88, roughness: .3, envMapIntensity: 1.15, ...opts });
+
+/* body */
+{
+  const [m, e] = stripeTexture({ lines: 96, seams: 3, windows: 70, seed: 3 });
+  m.wrapS = e.wrapS = THREE.RepeatWrapping;
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(2.12, 2.12, 1.92, 128, 1, true),
+    metal({ map: m, emissiveMap: e, emissive: 0xffffff, emissiveIntensity: 1.2 }));
+  tower.add(body);
+}
+/* upper skirt, text band, saucer cap */
+function lathe(pts, mat, seg = 128) { return new THREE.Mesh(new THREE.LatheGeometry(pts.map(p => new THREE.Vector2(p[0], p[1])), seg), mat); }
+tower.add(lathe([[2.12, .94], [2.08, 1.06], [1.86, 1.22], [1.58, 1.33], [1.5, 1.36]], metal({ roughness: .25 })));
+tower.add(lathe([[2.5, -1.4], [2.44, -1.5], [2.16, -1.64], [1.56, -1.8], [.95, -1.92], [.66, -2.0]].reverse(), metal({ color: 0x5a6280, roughness: .45 })));
+
+let topBand, contactBand;
+function textBand(text, { bg, fg, font, repeat = 3, w = 2048, h = 128, sep = true, stroke }) {
+  const [c, x] = cnv(w, h);
+  x.fillStyle = bg; x.fillRect(0, 0, w, h);
+  x.font = font; x.textBaseline = 'middle';
+  const tw = x.measureText(text).width, n = Math.max(1, Math.floor(w / (tw + 60))), gap = (w - n * tw) / n;
+  for (let i = 0; i < n; i++) {
+    const px = i * (tw + gap) + gap / 2;
+    x.fillStyle = fg; x.fillText(text, px, h / 2 + 4);
+    if (sep) { x.fillStyle = fg; x.globalAlpha = .55; x.fillRect(px - gap / 2, h * .22, 2, h * .56); x.globalAlpha = 1; }
+  }
+  if (stroke) { x.fillStyle = stroke; x.fillRect(0, 0, w, 5); x.fillRect(0, h - 5, w, 5); }
+  const t = tex(c); t.wrapS = THREE.RepeatWrapping; t.repeat.x = repeat;
+  return t;
+}
+
+/* ---------- panel geometry (grid → rounded rect → bent around tower) ---------- */
+const PANEL = { R: 2.3, w: 3.12, h: 1.36, r: .2, t: .1, nx: 72, ny: 24 };
+function panelFlat(w, h, r, t, nx = PANEL.nx, ny = PANEL.ny) {
+  const nf = (nx + 1) * (ny + 1), L = 2 * nx + 2 * ny;
+  const pos = new Float32Array((nf * 2 + L * 4) * 3);
+  const P = (i, j) => {
+    let x = -w / 2 + w * i / nx, y = -h / 2 + h * j / ny;
+    const cx = Math.max(-w / 2 + r, Math.min(w / 2 - r, x)), cy = Math.max(-h / 2 + r, Math.min(h / 2 - r, y));
+    const dx = x - cx, dy = y - cy, d = Math.hypot(dx, dy);
+    if (d > r) { x = cx + dx / d * r; y = cy + dy / d * r; }
+    return [x, y];
+  };
+  const grid = [];
+  for (let j = 0; j <= ny; j++) for (let i = 0; i <= nx; i++) grid.push(P(i, j));
+  grid.forEach(([x, y], k) => { pos.set([x, y, t / 2], k * 3); pos.set([x, y, -t / 2], (nf + k) * 3); });
+  const loop = boundary(nx, ny);
+  let o = nf * 2;
+  for (let k = 0; k < L; k++) {
+    const a = grid[loop[k]], b = grid[loop[(k + 1) % L]];
+    pos.set([a[0], a[1], t / 2, b[0], b[1], t / 2, b[0], b[1], -t / 2, a[0], a[1], -t / 2], o * 3); o += 4;
+  }
+  return pos;
+}
+function boundary(nx, ny) {
+  const id = (i, j) => j * (nx + 1) + i, L = [];
+  for (let i = 0; i <= nx; i++) L.push(id(i, 0));
+  for (let j = 1; j <= ny; j++) L.push(id(nx, j));
+  for (let i = nx - 1; i >= 0; i--) L.push(id(i, ny));
+  for (let j = ny - 1; j >= 1; j--) L.push(id(0, j));
+  return L;
+}
+function panelGeometry() {
+  const { w, h, r, t, nx, ny, R } = PANEL;
+  const nf = (nx + 1) * (ny + 1), L = 2 * nx + 2 * ny;
+  const flat = panelFlat(w, h, r, t);
+  const bent = new Float32Array(flat.length);
+  for (let k = 0; k < flat.length; k += 3) {
+    const x = flat[k], y = flat[k + 1], z = flat[k + 2], a = x / R, rr = R + z;
+    bent[k] = rr * Math.sin(a); bent[k + 1] = y; bent[k + 2] = rr * Math.cos(a) - R;
+  }
+  const uv = new Float32Array((nf * 2 + L * 4) * 2);
+  for (let k = 0; k < nf; k++) {
+    const u = (flat[k * 3] + w / 2) / w, v = (flat[k * 3 + 1] + h / 2) / h;
+    uv.set([u, v], k * 2); uv.set([1 - u, v], (nf + k) * 2);
+  }
+  const idx = [];
+  const id = (i, j) => j * (nx + 1) + i;
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+    const a = id(i, j), b = id(i + 1, j), c = id(i + 1, j + 1), d = id(i, j + 1);
+    idx.push(a, b, d, b, c, d);
+    idx.push(nf + a, nf + d, nf + b, nf + b, nf + d, nf + c);
+  }
+  const faceCount = idx.length;
+  for (let k = 0; k < L; k++) { const o = nf * 2 + k * 4; idx.push(o, o + 2, o + 1, o, o + 3, o + 2); }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(bent.slice(), 3));
+  g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  g.setIndex(idx);
+  g.addGroup(0, faceCount, 0); g.addGroup(faceCount, idx.length - faceCount, 1);
+  g.computeVertexNormals();
+  g.userData = { flat, bent };
+  return g;
+}
+
+/* panel material: lit texture that can melt into the flat, unlit page colour */
+function panelMaterial(map, hex, side = false) {
+  const solid = C(hex);
+  const m = new THREE.MeshStandardMaterial({
+    map: side ? null : map, color: side ? solid.clone().multiplyScalar(.7) : 0xffffff,
+    emissiveMap: side ? null : map, emissive: side ? solid.clone().multiplyScalar(.25) : 0xffffff, emissiveIntensity: side ? 1 : .42,
+    roughness: .5, metalness: 0, envMapIntensity: .5
+  });
+  m.userData.u = { uSolid: { value: solid }, uFlat: { value: 0 }, uGlow: { value: 0 } };
+  m.onBeforeCompile = s => {
+    Object.assign(s.uniforms, m.userData.u);
+    s.fragmentShader = 'uniform vec3 uSolid; uniform float uFlat; uniform float uGlow;\n' + s.fragmentShader.replace('#include <dithering_fragment>',
+      `#include <dithering_fragment>
+       gl_FragColor.rgb += gl_FragColor.rgb * uGlow * 0.35;
+       gl_FragColor.rgb = mix(gl_FragColor.rgb, uSolid, uFlat);`);
+  };
+  return m;
+}
+
+/* ---------- panel artwork (all drawn in canvas) ---------- */
+function rr(x, X, Y, W, H, r) { x.beginPath(); x.roundRect(X, Y, W, H, r); }
+function drawPanel(key) {
+  const W = 1024, H = Math.round(1024 * PANEL.h / PANEL.w);
+  const [c, x] = cnv(W, H), p = PAGES[key];
+  const rad = PANEL.r / PANEL.w * W;
+  x.fillStyle = p.bg; rr(x, 0, 0, W, H, rad); x.fill();
+  // paper grain
+  const R = rng(key.length * 31);
+  for (let i = 0; i < 2200; i++) { x.fillStyle = R() > .5 ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.05)'; x.fillRect(R() * W, R() * H, 2, 2); }
+  // top sheen
+  const sh = x.createLinearGradient(0, 0, 0, H); sh.addColorStop(0, 'rgba(255,255,255,.28)'); sh.addColorStop(.35, 'rgba(255,255,255,0)'); sh.addColorStop(1, 'rgba(0,0,0,.12)');
+  x.fillStyle = sh; rr(x, 0, 0, W, H, rad); x.fill();
+  x.strokeStyle = 'rgba(255,255,255,.45)'; x.lineWidth = 4; rr(x, 10, 10, W - 20, H - 20, rad - 8); x.stroke();
+  // fine print
+  x.fillStyle = p.ink; x.globalAlpha = .7; x.font = '500 15px "DM Mono"';
+  x.fillText('NIGHTMAST STUDIO — EST. AFTER DARK', 46, 50);
+  x.fillText('CH. 0' + (RING_ORDER.indexOf(key) + 1 || 5) + ' / 42.88°S', W - 230, 50);
+  const foot = ['NIGHTMAST STUDIO', key === 'pricing' ? 'SCOPE. PLAN. GLOW.' : 'TUNED IN SINCE 2007', 'TAP TO OPEN →'];
+  foot.forEach((t, i) => x.fillText(t, 46 + i * ((W - 92) / 3) + (i === 2 ? 60 : 0), H - 34));
+  x.globalAlpha = 1;
+  x.save();
+  if (key === 'about') {
+    x.translate(W / 2, H / 2 + 6); x.rotate(-.07);
+    x.fillStyle = p.ink; x.font = '230px Yellowtail'; x.textAlign = 'center';
+    x.fillText('About', -60, 0); x.font = '190px Yellowtail'; x.fillText('Us', 190, 120);
+    x.strokeStyle = p.ink; x.lineWidth = 4; x.beginPath(); x.moveTo(-300, 40); x.bezierCurveTo(-100, 70, 120, 20, 300, 50); x.stroke();
+  } else if (key === 'pricing') {
+    x.translate(W / 2, H / 2 + 50); x.rotate(-.05); x.textAlign = 'center';
+    x.font = '250px Yellowtail';
+    x.fillStyle = '#fff4a8'; x.fillText('Pricing', 6, 8);
+    x.fillStyle = '#111'; x.fillText('Pricing', 0, 0);
+    x.lineWidth = 7; x.strokeStyle = '#111'; x.beginPath(); x.moveTo(-260, 50); x.quadraticCurveTo(0, 90, 300, 30); x.stroke();
+  } else if (key === 'work') {
+    // crescent / beam graphic
+    x.save(); rr(x, 50, 74, 440, H - 150, 22); x.clip();
+    x.fillStyle = '#8c0030'; x.fillRect(50, 74, 440, H - 150);
+    x.fillStyle = '#ffd9e5'; x.beginPath(); x.arc(270, 230, 120, 0, 7); x.fill();
+    x.fillStyle = '#8c0030'; x.beginPath(); x.arc(320, 200, 112, 0, 7); x.fill();
+    x.strokeStyle = '#ff5c8d'; x.lineWidth = 10;
+    for (let i = 0; i < 6; i++) { x.beginPath(); x.moveTo(50, 360 - i * 18); x.lineTo(490, 300 - i * 34); x.stroke(); }
+    x.restore();
+    x.fillStyle = '#8c0030'; x.font = '170px Anton'; x.textAlign = 'left';
+    x.fillText('Our', 540, 220); x.fillText('Work', 540, 370);
+    x.strokeStyle = '#ffd9e5'; x.lineWidth = 3; x.strokeText('Our', 546, 214); x.strokeText('Work', 546, 364);
+  } else if (key === 'services') {
+    x.fillStyle = p.ink; x.font = '500 76px Inter'; x.textAlign = 'left'; x.fillText('Services', 70, 170);
+    x.font = '400 22px Inter'; x.globalAlpha = .75; x.fillText('Brand · Digital · Content · Packaging · Growth', 74, 214); x.globalAlpha = 1;
+    // telescope line-art
+    x.strokeStyle = p.ink; x.lineWidth = 5; x.lineCap = 'round'; x.lineJoin = 'round';
+    x.save(); x.translate(760, 250); x.rotate(-.5);
+    x.strokeRect(-120, -26, 200, 52); x.strokeRect(80, -34, 60, 68); x.strokeRect(-170, -16, 50, 32); x.restore();
+    x.beginPath(); x.moveTo(760, 262); x.lineTo(690, 390); x.moveTo(760, 262); x.lineTo(760, 395); x.moveTo(760, 262); x.lineTo(830, 390); x.stroke();
+    const star = (sx, sy, s) => { x.beginPath(); x.moveTo(sx, sy - s); x.lineTo(sx, sy + s); x.moveTo(sx - s, sy); x.lineTo(sx + s, sy); x.stroke(); };
+    x.lineWidth = 4; star(900, 96, 16); star(960, 160, 9); star(640, 110, 10);
+    x.beginPath(); x.arc(70 + 150, 300, 46, 0, 7); x.stroke(); x.beginPath(); x.ellipse(220, 300, 80, 16, -.3, 0, 7); x.stroke();
+  } else if (key === 'contact') {
+    x.translate(W / 2, H / 2 + 40); x.rotate(-.05); x.textAlign = 'center';
+    x.fillStyle = p.ink; x.font = '210px Yellowtail'; x.fillText('Contact', 0, 0);
+  }
+  x.restore();
+  return tex(c);
+}
+
+/* ---------- build ring of panels ---------- */
+const ring = new THREE.Group();
+tower.add(ring);
+const panels = {};
+let sharedGeo;
+async function buildPanels() {
+  sharedGeo = panelGeometry();
+  RING_ORDER.forEach((key, i) => {
+    const theta = i * Math.PI / 2;
+    const slot = new THREE.Object3D();
+    slot.position.set(Math.sin(theta) * PANEL.R, 0, Math.cos(theta) * PANEL.R);
+    slot.rotation.y = theta;
+    ring.add(slot);
+    panels[key] = makePanel(key, slot);
+  });
+  // contact panel: hidden inside the orange ring until it is called
+  const cslot = new THREE.Object3D();
+  cslot.position.set(0, -1.17, 2.52);
+  tower.add(cslot);
+  panels.contact = makePanel('contact', cslot);
+  panels.contact.mesh.visible = false;
+  panels.contact.hiddenAtHome = true;
+}
+function makePanel(key, slot) {
+  const geo = sharedGeo.clone(); geo.userData = sharedGeo.userData;
+  const map = drawPanel(key);
+  const mats = [panelMaterial(map, PAGES[key].bg), panelMaterial(null, PAGES[key].bg, true)];
+  const mesh = new THREE.Mesh(geo, mats);
+  mesh.userData.key = key;
+  slot.add(mesh);
+  return { key, slot, mesh, mats, hover: 0, hoverT: 0 };
+}
+
+/* ---------- top band, contact ring, cap & antenna ---------- */
+function buildTowerDetails() {
+  topBand = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, .36, 128, 1, true),
+    new THREE.MeshStandardMaterial({ map: textBand('NIGHTMAST STUDIO', { bg: '#efe8d6', fg: '#14161f', font: '600 78px Inter' }), roughness: .6, emissive: 0x2a2620, emissiveIntensity: .6 }));
+  topBand.position.y = 1.54; tower.add(topBand);
+  topBand.material.emissiveMap = topBand.material.map; topBand.material.emissive.set(0xffffff); topBand.material.emissiveIntensity = .22;
+
+  const cmap = textBand('CONTACT US', { bg: '#ff5a1f', fg: '#2b0800', font: '400 86px Anton', sep: false, repeat: 4 });
+  contactBand = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 2.5, .44, 128, 1, true),
+    new THREE.MeshStandardMaterial({ map: cmap, emissiveMap: cmap, emissive: 0xffffff, emissiveIntensity: .55, roughness: .45 }));
+  contactBand.position.y = -1.17; contactBand.userData.key = 'contact';
+  tower.add(contactBand);
+  const lip = (y) => { const t = new THREE.Mesh(new THREE.TorusGeometry(2.5, .035, 10, 128), new THREE.MeshStandardMaterial({ color: 0xff7a3d, emissive: 0xff5a1f, emissiveIntensity: .8, roughness: .3 })); t.rotation.x = Math.PI / 2; t.position.y = y; tower.add(t); };
+  lip(-.95); lip(-1.39);
+  const top = new THREE.Mesh(new THREE.RingGeometry(2.12, 2.5, 128), new THREE.MeshStandardMaterial({ color: 0x40263a, roughness: .7, side: THREE.DoubleSide }));
+  top.rotation.x = -Math.PI / 2; top.position.y = -.95; tower.add(top);
+
+  // saucer cap
+  tower.add(lathe([[1.42, 1.72], [1.64, 1.78], [1.8, 1.86], [1.83, 1.93], [1.74, 2.02], [1.36, 2.12], [.86, 2.2], [.42, 2.26], [0, 2.28]], metal({ roughness: .22 })));
+  const under = new THREE.Mesh(new THREE.CircleGeometry(1.45, 64), metal({ color: 0x2c3150, roughness: .6, side: THREE.DoubleSide }));
+  under.rotation.x = Math.PI / 2; under.position.y = 1.72; tower.add(under);
+}
+
+/* chasing rim lights + underside lights */
+let rimLights, underLights;
+function lightRing(count, radius, y, size) {
+  const m = new THREE.InstancedMesh(new THREE.SphereGeometry(size, 10, 8), new THREE.MeshBasicMaterial({ color: new THREE.Color(3.2, 3.0, 2.6) }), count);
+  const o = new THREE.Object3D();
+  for (let i = 0; i < count; i++) { const a = i / count * Math.PI * 2; o.position.set(Math.sin(a) * radius, y, Math.cos(a) * radius); o.updateMatrix(); m.setMatrixAt(i, o.matrix); m.setColorAt(i, new THREE.Color(1, 1, 1)); }
+  tower.add(m); return m;
+}
+
+/* antenna: segmented mast, orbiting halo, sweeping dish, blinking beacon, broadcast rings */
+const antenna = new THREE.Group();
+let beacon, beaconGlow, halo, dishPivot;
+const pulses = [];
+function buildAntenna() {
+  tower.add(antenna);
+  const mm = metal({ roughness: .28 });
+  const seg = (r1, r2, y0, y1) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(r2, r1, y1 - y0, 24), mm); m.position.y = (y0 + y1) / 2; antenna.add(m); };
+  seg(.42, .36, 2.24, 2.5); seg(.2, .17, 2.5, 3.0); seg(.1, .085, 3.0, 3.9); seg(.05, .04, 3.9, 4.75);
+  // collars
+  [2.5, 3.0, 3.42, 3.9, 4.3].forEach((y, i) => { const t = new THREE.Mesh(new THREE.TorusGeometry([.38, .2, .12, .1, .07][i], .022, 8, 40), mm); t.rotation.x = Math.PI / 2; t.position.y = y; antenna.add(t); });
+  // guy wires
+  const wireMat = new THREE.LineBasicMaterial({ color: 0x8792bb, transparent: true, opacity: .55 });
+  for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + .4; const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(Math.sin(a) * 1.0, 2.2, Math.cos(a) * 1.0), new THREE.Vector3(0, 3.9, 0)]); antenna.add(new THREE.Line(g, wireMat)); }
+  // orbiting halo with three beacons
+  halo = new THREE.Group(); halo.position.y = 3.42; antenna.add(halo);
+  const hr = new THREE.Mesh(new THREE.TorusGeometry(.52, .012, 8, 80), new THREE.MeshBasicMaterial({ color: new THREE.Color(.6, .7, 2.2) })); hr.rotation.x = Math.PI / 2; halo.add(hr);
+  ['#7fe6ff', '#ff9ad5', '#ffe27a'].forEach((col, i) => {
+    const b = new THREE.Mesh(new THREE.SphereGeometry(.045, 12, 8), new THREE.MeshBasicMaterial({ color: C(col).multiplyScalar(4) }));
+    const a = i * Math.PI * 2 / 3; b.position.set(Math.sin(a) * .52, 0, Math.cos(a) * .52); halo.add(b);
+  });
+  // small dish that sweeps
+  dishPivot = new THREE.Group(); dishPivot.position.y = 2.82; antenna.add(dishPivot);
+  const arm = new THREE.Mesh(new THREE.CylinderGeometry(.02, .02, .42, 8), mm); arm.rotation.z = Math.PI / 2; arm.position.x = .3; dishPivot.add(arm);
+  const dish = new THREE.Mesh(new THREE.SphereGeometry(.2, 24, 12, 0, Math.PI * 2, 0, Math.PI / 3.2), metal({ color: 0xeef1ff, roughness: .2, side: THREE.DoubleSide }));
+  dish.rotation.z = Math.PI / 2 + .35; dish.position.x = .58; dishPivot.add(dish);
+  const feed = new THREE.Mesh(new THREE.SphereGeometry(.025, 8, 6), new THREE.MeshBasicMaterial({ color: new THREE.Color(3, .6, .4) })); feed.position.set(.44, .06, 0); dishPivot.add(feed);
+  // beacon
+  beacon = new THREE.Mesh(new THREE.SphereGeometry(.07, 16, 12), new THREE.MeshBasicMaterial({ color: new THREE.Color(6, .4, .3) }));
+  beacon.position.y = 4.8; antenna.add(beacon);
+  const [c, x] = cnv(128, 128); const g = x.createRadialGradient(64, 64, 0, 64, 64, 64);
+  g.addColorStop(0, 'rgba(255,90,70,1)'); g.addColorStop(.3, 'rgba(255,60,50,.35)'); g.addColorStop(1, 'rgba(255,40,40,0)'); x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+  beaconGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex(c), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
+  beaconGlow.position.y = 4.8; beaconGlow.scale.setScalar(1.1); antenna.add(beaconGlow);
+  // broadcast pulses
+  for (let i = 0; i < 3; i++) {
+    const p = new THREE.Mesh(new THREE.TorusGeometry(1, .006, 6, 120), new THREE.MeshBasicMaterial({ color: new THREE.Color(.9, 1.1, 2.6), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+    p.rotation.x = Math.PI / 2; p.position.y = 4.72; antenna.add(p); pulses.push({ m: p, off: i / 3 });
+  }
+}
+
+/* shaft */
+function buildShaft() {
+  const [m, e] = stripeTexture({ lines: 28, base: '#8a95b4', w: 512, h: 512, seams: 0, windows: 0 });
+  m.wrapS = m.wrapT = THREE.RepeatWrapping; m.repeat.set(2, 18);
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(.64, .82, 70, 64, 1, true), metal({ map: m, roughness: .34 }));
+  shaft.position.y = -2 - 35; tower.add(shaft);
+  // a few warm maintenance lights down the shaft
+  for (let i = 0; i < 6; i++) {
+    const l = new THREE.Mesh(new THREE.SphereGeometry(.04, 8, 6), new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 1.6, .7) }));
+    const a = i * 2.1; l.position.set(Math.sin(a) * .7, -3.2 - i * 2.6, Math.cos(a) * .7); tower.add(l);
+  }
+}
+
+/* =====================================================================
+   CAMERA RIG
+   ===================================================================== */
+const rig = { target: new THREE.Vector3(0, 1.1, 0), dir: new THREE.Vector3(0, -.2, 1).normalize(), dist: 14, pan: 0, intro: 1, mx: 0, my: 0, sx: 0, sy: 0 };
+function baseDistance() {
+  const tanH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  const needW = 3.0 / (tanH * camera.aspect);   // keep the ring inside the width
+  const needH = 5.6 / tanH;                       // keep antenna inside the height
+  return Math.max(13.4, needW, needH * .8);
+}
+function cameraPose(pan, out = { pos: new THREE.Vector3(), look: new THREE.Vector3(), quat: new THREE.Quaternion() }) {
+  const d = rig.dist * (1 + rig.intro * .55);
+  const right = new THREE.Vector3(1, 0, 0), up = new THREE.Vector3(0, 1, 0);
+  const panV = right.clone().multiplyScalar(pan * d * .62).add(up.clone().multiplyScalar(pan * d * .05));
+  out.look.copy(rig.target).add(panV).add(new THREE.Vector3(rig.sx * .35, rig.sy * .25 - rig.intro * 1.4, 0));
+  out.pos.copy(rig.target).addScaledVector(rig.dir, d).add(panV).add(new THREE.Vector3(rig.sx * 1.1, rig.sy * .7 - rig.intro * 3.5, 0));
+  const m = new THREE.Matrix4().lookAt(out.pos, out.look, up);
+  out.quat.setFromRotationMatrix(m);
+  return out;
+}
+function applyCamera() {
+  const p = cameraPose(rig.pan);
+  camera.position.copy(p.pos); camera.quaternion.copy(p.quat);
+  skyGroup.position.copy(camera.position);
+}
+
+/* =====================================================================
+   INTERACTION: spin / hover / click
+   ===================================================================== */
+let state = 'intro';           // intro | idle | opening | open | closing
+let spin = 0, spinVel = 0;
+const IDLE_SPIN = .09;
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+let hovered = null;
+const tip = $('#tip');
+
+function pick(clientX, clientY) {
+  ndc.set(clientX / innerWidth * 2 - 1, -(clientY / innerHeight) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  const targets = RING_ORDER.map(k => panels[k].mesh).concat(contactBand ? [contactBand] : []);
+  const hit = ray.intersectObjects(targets, false)[0];
+  return hit ? hit.object.userData.key : null;
+}
+function setHover(key, x, y) {
+  if (key !== hovered) {
+    hovered = key;
+    canvas.style.cursor = key ? 'pointer' : 'grab';
+    if (key) tip.textContent = PAGES[key].tip;
+  }
+  tip.classList.toggle('on', !!key && !isTouch);
+  if (key) { tip.style.left = x + 'px'; tip.style.top = (y - 34) + 'px'; }
+}
+
+canvas.addEventListener('wheel', e => {
+  if (state !== 'idle') return;
+  e.preventDefault();
+  const d = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+  spinVel += THREE.MathUtils.clamp(d, -120, 120) * .0016;
+}, { passive: false });
+
+let drag = null;
+canvas.addEventListener('pointerdown', e => {
+  if (state !== 'idle') return;
+  drag = { x: e.clientX, y: e.clientY, lx: e.clientX, t: performance.now(), moved: 0 };
+  canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointermove', e => {
+  rig.mx = e.clientX / innerWidth * 2 - 1; rig.my = e.clientY / innerHeight * 2 - 1;
+  if (drag) {
+    const dx = e.clientX - drag.lx; drag.lx = e.clientX; drag.moved += Math.abs(dx);
+    spin += dx * .006; spinVel = dx * .35;
+    canvas.style.cursor = 'grabbing';
+  }
+  if (state === 'idle' && e.pointerType !== 'touch' && !drag) setHover(pick(e.clientX, e.clientY), e.clientX, e.clientY);
+});
+canvas.addEventListener('pointerup', e => {
+  if (!drag) return;
+  const tapped = drag.moved < 8 && performance.now() - drag.t < 450;
+  drag = null; canvas.style.cursor = hovered ? 'pointer' : 'grab';
+  if (tapped && state === 'idle') { const k = pick(e.clientX, e.clientY); if (k) openPage(k); }
+});
+canvas.addEventListener('pointerleave', () => setHover(null));
+canvas.addEventListener('keydown', e => {
+  if (state !== 'idle') return;
+  if (e.key === 'ArrowLeft') spinVel -= .8;
+  if (e.key === 'ArrowRight') spinVel += .8;
+  if (e.key === 'Enter') openPage(frontPanel());
+});
+function frontPanel() {
+  let best = RING_ORDER[0], bd = 9;
+  RING_ORDER.forEach((k, i) => { const a = ((i * Math.PI / 2 + spin) % (Math.PI * 2) + Math.PI * 3) % (Math.PI * 2) - Math.PI; if (Math.abs(a) < bd) { bd = Math.abs(a); best = k; } });
+  return best;
+}
+
+/* =====================================================================
+   OPEN / CLOSE TRANSITION
+   ===================================================================== */
+const card = $('#card'), hud = $('#hud');
+const FLY_OPEN = reduced ? .6 : 1.75, FLY_CLOSE = reduced ? .5 : 1.45;
+let flight = null;
+
+const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const sstep = (a, b, x) => { const t = THREE.MathUtils.clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+
+function cardTarget() {
+  // world-space rectangle in front of the *final* camera that exactly covers the DOM card
+  const D = 5;
+  const pose = cameraPose(1);
+  const tanH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  const visH = 2 * D * tanH, px = visH / innerHeight;
+  card.classList.add('measure');
+  const r = card.getBoundingClientRect();
+  const radius = parseFloat(getComputedStyle(card).borderRadius) || 28;
+  const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(pose.quat);
+  const rightV = new THREE.Vector3(1, 0, 0).applyQuaternion(pose.quat);
+  const upV = new THREE.Vector3(0, 1, 0).applyQuaternion(pose.quat);
+  const offX = (r.left + r.width / 2 - innerWidth / 2) * px, offY = -(r.top + r.height / 2 - innerHeight / 2) * px;
+  const pos = pose.pos.clone().addScaledVector(fwd, D).addScaledVector(rightV, offX).addScaledVector(upV, offY);
+  const flat = panelFlat(r.width * px, r.height * px, Math.min(radius * px, r.height * px / 2), .015);
+  return { pos, quat: pose.quat.clone(), flat, rightV, upV, fwd };
+}
+
+function homePose(p) {
+  p.slot.updateWorldMatrix(true, false);
+  const pos = new THREE.Vector3(), quat = new THREE.Quaternion();
+  p.slot.getWorldPosition(pos); p.slot.getWorldQuaternion(quat);
+  return { pos, quat };
+}
+
+function morph(p, b, g) {
+  // b: bend amount (1 = wrapped on tower), g: grow toward page card
+  const geo = p.mesh.geometry, arr = geo.attributes.position.array;
+  const { flat, bent } = geo.userData, T = flight.target.flat;
+  for (let k = 0; k < arr.length; k++) {
+    const v = flat[k] + (bent[k] - flat[k]) * b;
+    arr[k] = v + (T[k] - v) * g;
+  }
+  geo.attributes.position.needsUpdate = true;
+  geo.computeVertexNormals();
+  geo.computeBoundingSphere();
+}
+
+const tmpQ = new THREE.Quaternion(), twistQ = new THREE.Quaternion(), zAxis = new THREE.Vector3(0, 0, 1);
+function poseFlight(s) {
+  const p = flight.p, home = homePose(p), T = flight.target;
+  const out = home.quat.clone(); const outward = new THREE.Vector3(0, 0, 1).applyQuaternion(out);
+  const c1 = home.pos.clone().addScaledVector(outward, 3.2).add(new THREE.Vector3(0, 1.3, 0));
+  const c2 = T.pos.clone().addScaledVector(T.rightV, 2.4).addScaledVector(T.upV, .9).addScaledVector(T.fwd, 2.2);
+  const a = ease(s), ia = 1 - a;
+  const pos = home.pos.clone().multiplyScalar(ia * ia * ia)
+    .addScaledVector(c1, 3 * ia * ia * a).addScaledVector(c2, 3 * ia * a * a).addScaledVector(T.pos, a * a * a);
+  p.mesh.parent !== scene && scene.attach(p.mesh);
+  p.mesh.position.copy(pos);
+  tmpQ.copy(home.quat).slerp(T.quat, sstep(.05, .85, s));
+  twistQ.setFromAxisAngle(zAxis, Math.sin(Math.PI * s) * .35 * flight.side);
+  p.mesh.quaternion.copy(tmpQ).multiply(twistQ);
+  const sc = p.hiddenAtHome ? THREE.MathUtils.lerp(.25, 1, sstep(0, .25, s)) : 1;
+  p.mesh.scale.setScalar(sc);
+  morph(p, 1 - sstep(.06, .55, s), ease(sstep(.55, 1, s)));
+  p.mats.forEach(m => m.userData.u.uFlat.value = sstep(.38, .82, s));
+  rig.pan = ease(sstep(.12, .95, s));
+}
+
+function openPage(key) {
+  if (state === 'open') { swapPage(key); return; }
+  if (state !== 'idle') return;
+  closeMenu();
+  const p = panels[key];
+  state = 'opening';
+  setHover(null);
+  hud.classList.add('hide');
+  renderPage(key);
+  p.mesh.position.set(0, 0, 0); p.hover = 0;
+  p.mats.forEach(m => m.userData.u.uGlow.value = 0);
+  p.mesh.visible = true;
+  flight = { p, key, t: 0, dir: 1, side: Math.random() < .5 ? -1 : 1, target: cardTarget() };
+  sfx.whoosh(1);
+  if (location.hash !== '#' + key) history.pushState({ page: key }, '', '#' + key);
+}
+
+function finishOpen() {
+  card.classList.remove('fade');
+  card.classList.add('vis');
+  flight.p.mesh.visible = false;
+  state = 'open';
+  canvas.style.cursor = 'zoom-out';
+  requestAnimationFrame(() => card.classList.add('show'));
+  setTimeout(() => $('#scroller').focus?.(), 50);
+}
+
+function closePage() {
+  if (state !== 'open') return;
+  state = 'closing';
+  card.classList.add('hide-content');
+  card.classList.remove('show');
+  setTimeout(() => {
+    flight.target = cardTarget();
+    flight.t = 1; flight.dir = -1;
+    poseFlight(1);
+    flight.p.mesh.visible = true;
+    card.classList.add('fade');
+    card.classList.remove('vis');
+    sfx.whoosh(-1);
+  }, reduced ? 50 : 260);
+}
+
+function finishClose() {
+  const p = flight.p;
+  p.slot.attach(p.mesh);
+  p.mesh.position.set(0, 0, 0); p.mesh.quaternion.identity(); p.mesh.scale.setScalar(1);
+  const geo = p.mesh.geometry; geo.attributes.position.array.set(geo.userData.bent); geo.attributes.position.needsUpdate = true; geo.computeVertexNormals(); geo.computeBoundingSphere();
+  p.mats.forEach(m => m.userData.u.uFlat.value = 0);
+  if (p.hiddenAtHome) p.mesh.visible = false;
+  card.classList.remove('hide-content', 'fade');
+  hud.classList.remove('hide');
+  flight = null; rig.pan = 0;
+  state = 'idle';
+  canvas.style.cursor = 'grab'; hovered = null;
+  if (location.hash && !pendingOpen) history.replaceState(null, '', location.pathname + location.search);
+  canvas.focus({ preventScroll: true });
+}
+
+function swapPage(key) {
+  // while a page is open, jumping to another one closes back to the tower then opens the next
+  closeMenu();
+  history.replaceState(null, '', location.pathname + location.search);
+  pendingOpen = key;
+  closePage();
+}
+let pendingOpen = null;
+
+function requestClose() {
+  if (state !== 'open') return;
+  if (history.state && history.state.page) history.back(); else closePage();
+}
+addEventListener('popstate', () => {
+  const k = location.hash.slice(1);
+  if (state === 'open' && (!k || !PAGES[k])) closePage();
+  else if (state === 'idle' && PAGES[k]) openPage(k);
+});
+addEventListener('keydown', e => { if (e.key === 'Escape') { if (menu.classList.contains('open')) closeMenu(); else requestClose(); } });
+document.addEventListener('click', e => {
+  const c = e.target.closest('[data-close]'); if (c) { e.preventDefault(); requestClose(); return; }
+  const o = e.target.closest('[data-open]'); if (o) { e.preventDefault(); openPage(o.dataset.open); return; }
+  if (e.target.closest('[data-home]')) { e.preventDefault(); spinVel += 2.4; return; }
+  if (e.target.closest('[data-star]')) { spawnShootingStar(); sfx.chime(); return; }
+  if (e.target.closest('[data-sound]')) { sfx.toggle(); return; }
+  if (e.target.closest('[data-cardmenu]') || e.target.closest('#menuBtn')) { e.stopPropagation(); toggleMenu(e.target.closest('button')); return; }
+  if (!e.target.closest('#menu')) {
+    const menuWasOpen = menu.classList.contains('open');
+    closeMenu();
+    // clicking anywhere outside the open page sends it back to the tower
+    if (!menuWasOpen && state === 'open' && !e.target.closest('#card')) requestClose();
+  }
+});
+
+/* menu sheet */
+const menu = $('#menu');
+['about', 'work', 'services', 'pricing', 'contact'].forEach((k, i) => {
+  const b = document.createElement('button');
+  b.innerHTML = `<i style="background:${PAGES[k].bg};color:${PAGES[k].bg}"></i>${PAGES[k].label}<span>0${i + 1}</span>`;
+  b.onclick = () => openPage(k);
+  menu.appendChild(b);
+});
+function toggleMenu(btn) {
+  const open = !menu.classList.contains('open');
+  menu.classList.toggle('open', open);
+  $('#menuBtn').setAttribute('aria-expanded', open);
+  menu.style.zIndex = state === 'open' ? 45 : 40;
+  if (state === 'open') { const r = btn.getBoundingClientRect(); menu.style.top = (r.bottom + 10) + 'px'; menu.style.left = r.left + 'px'; }
+  else { menu.style.top = ''; menu.style.left = ''; }
+}
+function closeMenu() { menu.classList.remove('open'); $('#menuBtn').setAttribute('aria-expanded', false); }
+
+/* =====================================================================
+   SOUND (WebAudio, all synthesised)
+   ===================================================================== */
+const sfx = (() => {
+  let ctx, master, on = false, cricketTimer;
+  function init() {
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    master = ctx.createGain(); master.gain.value = 0; master.connect(ctx.destination);
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 520; lp.Q.value = .6; lp.connect(master);
+    [55, 82.4, 110.2, 164.8].forEach((f, i) => {
+      const o = ctx.createOscillator(); o.type = i % 2 ? 'triangle' : 'sine'; o.frequency.value = f; o.detune.value = (i - 1.5) * 6;
+      const g = ctx.createGain(); g.gain.value = .06 / (i + 1); o.connect(g).connect(lp); o.start();
+    });
+    const lfo = ctx.createOscillator(), lg = ctx.createGain(); lfo.frequency.value = .05; lg.gain.value = 260; lfo.connect(lg).connect(lp.frequency); lfo.start();
+  }
+  function chirp() {
+    if (!on) return;
+    const t = ctx.currentTime, pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+    if (pan) { pan.pan.value = Math.random() * 1.6 - .8; pan.connect(master); }
+    for (let i = 0; i < 3; i++) {
+      const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = 4300 + Math.random() * 300;
+      g.gain.setValueAtTime(0, t + i * .07); g.gain.linearRampToValueAtTime(.018, t + i * .07 + .01); g.gain.linearRampToValueAtTime(0, t + i * .07 + .05);
+      o.connect(g).connect(pan || master); o.start(t + i * .07); o.stop(t + i * .07 + .06);
+    }
+    cricketTimer = setTimeout(chirp, 600 + Math.random() * 1800);
+  }
+  return {
+    toggle() {
+      if (!ctx) init();
+      on = !on; ctx.resume();
+      master.gain.cancelScheduledValues(ctx.currentTime);
+      master.gain.linearRampToValueAtTime(on ? .55 : 0, ctx.currentTime + .8);
+      $$('[data-sound]').forEach(b => { b.innerHTML = on ? ICON_SOUND : ICON_MUTE; b.classList.toggle('on', on); });
+      clearTimeout(cricketTimer); if (on) chirp();
+    },
+    whoosh(dir) {
+      if (!on) return;
+      const t = ctx.currentTime, len = 1.1, buf = ctx.createBuffer(1, ctx.sampleRate * len, ctx.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      const s = ctx.createBufferSource(); s.buffer = buf;
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 1.4;
+      bp.frequency.setValueAtTime(dir > 0 ? 260 : 1800, t); bp.frequency.exponentialRampToValueAtTime(dir > 0 ? 1800 : 260, t + len);
+      const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.22, t + .3); g.gain.linearRampToValueAtTime(0, t + len);
+      s.connect(bp).connect(g).connect(master); s.start(t);
+    },
+    chime() {
+      if (!on) return;
+      const t = ctx.currentTime;
+      [1318, 1760, 2637].forEach((f, i) => { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = f; g.gain.setValueAtTime(0, t + i * .08); g.gain.linearRampToValueAtTime(.05, t + i * .08 + .01); g.gain.exponentialRampToValueAtTime(.0001, t + i * .08 + 1.2); o.connect(g).connect(master); o.start(t + i * .08); o.stop(t + i * .08 + 1.3); });
+    }
+  };
+})();
+
+/* =====================================================================
+   LOOP
+   ===================================================================== */
+const clock = new THREE.Clock();
+let nextShoot = 4;
+const tmpC = new THREE.Color();
+function tick() {
+  const dt = Math.min(clock.getDelta(), 1 / 20), t = clock.elapsedTime;
+
+  // intro settle
+  if (state === 'intro') { rig.intro = Math.max(0, rig.intro - dt * .55); if (rig.intro <= 0) { state = 'idle'; const k = location.hash.slice(1); if (PAGES[k]) openPage(k); } }
+  const introE = ease(1 - rig.intro);
+
+  // parallax (desktop only)
+  const k = isTouch ? 0 : 1;
+  rig.sx += ((rig.mx * k) - rig.sx) * Math.min(1, dt * 2.5);
+  rig.sy += ((-rig.my * k) - rig.sy) * Math.min(1, dt * 2.5);
+
+  // ring spin w/ inertia
+  if (!drag) {
+    const target = state === 'idle' || state === 'intro' ? IDLE_SPIN : 0.02;
+    spinVel += (target - spinVel) * Math.min(1, dt * 1.6);
+    spin += spinVel * dt;
+  }
+  ring.rotation.y = spin + (1 - introE) * -2.2;
+  topBand.rotation.y = -t * .12;
+  contactBand.material.map.offset.x = -t * .02;
+
+  // hover lift
+  RING_ORDER.forEach(key => {
+    const p = panels[key];
+    if (flight && flight.p === p) return;
+    p.hoverT = hovered === key ? 1 : 0;
+    p.hover += (p.hoverT - p.hover) * Math.min(1, dt * 8);
+    p.mesh.position.z = p.hover * .16;
+    p.mesh.scale.setScalar(1 + p.hover * .035);
+    p.mats[0].userData.u.uGlow.value = p.hover;
+  });
+  contactBand.material.emissiveIntensity = .55 + (hovered === 'contact' ? .5 : 0) + Math.sin(t * 2) * .05;
+
+  // antenna life
+  halo.rotation.y = t * .9; halo.rotation.z = Math.sin(t * .6) * .12;
+  dishPivot.rotation.y = Math.sin(t * .35) * 2.4;
+  const blink = (Math.sin(t * 3.2) > .55) ? 1 : .08;
+  beacon.material.color.setRGB(6 * blink + .4, .35 * blink, .25 * blink);
+  beaconGlow.material.opacity = blink; beaconGlow.scale.setScalar(.9 + blink * .5);
+  pulses.forEach(p => { const ph = (t * .38 + p.off) % 1; p.m.scale.setScalar(.12 + ph * 2.1); p.m.material.opacity = (1 - ph) * (1 - ph) * .5; });
+
+  // chasing lights
+  for (let i = 0; i < rimLights.count; i++) {
+    const v = .25 + .75 * Math.pow(.5 + .5 * Math.sin(i * .55 - t * 4), 6);
+    rimLights.setColorAt(i, tmpC.setRGB(v, v * .95, v * .85));
+  }
+  rimLights.instanceColor.needsUpdate = true;
+  for (let i = 0; i < underLights.count; i++) { const v = .35 + .65 * (.5 + .5 * Math.sin(t * 1.5 + i)); underLights.setColorAt(i, tmpC.setRGB(v * .5, v * .9, v * 1.3)); }
+  underLights.instanceColor.needsUpdate = true;
+
+  // flight
+  if (flight && (state === 'opening' || state === 'closing') && !(state === 'closing' && !flight.p.mesh.visible)) {
+    flight.t = THREE.MathUtils.clamp(flight.t + flight.dir * dt / (flight.dir > 0 ? FLY_OPEN : FLY_CLOSE), 0, 1);
+    poseFlight(flight.t);
+    if (flight.dir > 0 && flight.t >= 1) finishOpen();
+    else if (flight.dir < 0 && flight.t <= 0) { finishClose(); if (pendingOpen) { const k2 = pendingOpen; pendingOpen = null; openPage(k2); } }
+  }
+
+  // clouds drift
+  clouds.forEach(c => { c.position.x += c.userData.v * dt; if (c.position.x > c.userData.x0 + 14) c.position.x = c.userData.x0 - 14; });
+
+  // shooting stars
+  nextShoot -= dt;
+  if (nextShoot < 0) { spawnShootingStar(); nextShoot = 7 + Math.random() * 9; }
+  for (let i = shooting.length - 1; i >= 0; i--) {
+    const s = shooting[i]; s.t += dt;
+    const arr = s.p.geometry.attributes.position.array;
+    for (let j = 0; j < SHOOT_N; j++) {
+      const tt = Math.max(0, s.t - j * .012);
+      arr[j * 3] = s.head.x + s.vel.x * tt; arr[j * 3 + 1] = s.head.y + s.vel.y * tt; arr[j * 3 + 2] = s.head.z + s.vel.z * tt;
+    }
+    s.p.geometry.attributes.position.needsUpdate = true;
+    s.p.material.uniforms.uLife.value = Math.sin(Math.min(1, s.t / s.life) * Math.PI);
+    if (s.t > s.life) { skyGroup.remove(s.p); s.p.geometry.dispose(); s.p.material.dispose(); shooting.splice(i, 1); }
+  }
+
+  skyGroup.userData.starMat.uniforms.uTime.value = t;
+  applyCamera();
+  composer.render();
+  requestAnimationFrame(tick);
+}
+
+/* =====================================================================
+   RESIZE / CLOCK / BOOT
+   ===================================================================== */
+function resize() {
+  const w = innerWidth, h = innerHeight;
+  camera.aspect = w / h;
+  camera.fov = w < 700 ? 40 : 36;
+  camera.updateProjectionMatrix();
+  rig.dist = baseDistance();
+  skyGroup.rotation.y = camera.aspect < .8 ? -.26 : 0;   // bring the moon into frame on portrait screens
+  renderer.setSize(w, h);
+  composer.setSize(w, h);
+  bloom.resolution.set(w, h);
+  $('#hint1').textContent = isTouch ? 'Swipe to spin' : 'Scroll to spin';
+  $('#hint2').textContent = isTouch ? 'Tap to explore' : 'Click to explore';
+}
+addEventListener('resize', resize);
+
+function updateClock() {
+  try { $('#clock').textContent = new Intl.DateTimeFormat('en-AU', { hour: 'numeric', minute: '2-digit', timeZone: 'Australia/Hobart' }).format(new Date()); } catch (e) { }
+}
+setInterval(updateClock, 15000); updateClock();
+
+async function boot() {
+  const pct = $('.ld .pct'), bar = $('.ld .bar i');
+  let shown = 0;
+  const step = to => new Promise(r => { const iv = setInterval(() => { shown = Math.min(to, shown + 3); pct.textContent = shown + '%'; bar.style.width = shown + '%'; if (shown >= to) { clearInterval(iv); r(); } }, 16); });
+  const fontsReady = Promise.race([
+    Promise.all(['230px Yellowtail', '170px Anton', '500 76px Inter', '600 78px Inter', '500 15px "DM Mono"', 'italic 40px "Instrument Serif"'].map(f => document.fonts.load(f))),
+    new Promise(r => setTimeout(r, 3500))
+  ]);
+  await Promise.all([step(60), fontsReady]);
+  buildTowerDetails();
+  rimLights = lightRing(44, 1.84, 1.9, .028);
+  underLights = lightRing(28, 1.9, -1.66, .03);
+  buildAntenna();
+  buildShaft();
+  await buildPanels();
+  resize();
+  await step(100);
+  applyCamera();
+  canvas.style.cursor = 'grab';
+  tick();
+  setTimeout(() => $('#loader').classList.add('done'), 150);
+}
+boot();
+</script>
+</body>
+</html>
